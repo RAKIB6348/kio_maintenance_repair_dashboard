@@ -39,7 +39,7 @@
 
 .kio-topbar {
     display: grid;
-    grid-template-columns: minmax(280px, 1fr) minmax(320px, 560px) minmax(420px, 1.1fr);
+    grid-template-columns: minmax(280px, 1fr) auto;
     align-items: center;
     gap: 24px;
     padding: 18px 28px 14px;
@@ -88,31 +88,6 @@
     border-radius: 12px;
     background: linear-gradient(135deg, #2563EB, #4F46E5);
     font-size: 18px;
-}
-
-.kio-search {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    height: 50px;
-    min-width: 0;
-    padding: 0 18px;
-    border: 1px solid var(--kio-line);
-    border-radius: 12px;
-    background: white;
-    color: #475569;
-    box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.02);
-
-    input {
-        min-width: 0;
-        width: 100%;
-        border: 0;
-        outline: 0;
-        background: transparent;
-        color: var(--kio-text);
-        font-size: 14px;
-        font-weight: 600;
-    }
 }
 
 .kio-header-actions,
@@ -616,7 +591,7 @@
 .kio-bottom-primary .kio-bottom-icon { background: #EDE9FE; color: #7C3AED; }
 
 @media (max-width: 1400px) {
-    .kio-topbar { grid-template-columns: 1fr minmax(260px, 420px); }
+    .kio-topbar { grid-template-columns: 1fr; }
     .kio-header-actions { grid-column: 1 / -1; }
     .kio-kpi-grid { grid-template-columns: repeat(3, minmax(190px, 1fr)); }
     .kio-main-grid,

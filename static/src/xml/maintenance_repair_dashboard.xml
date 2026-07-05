@@ -41,10 +41,6 @@
                         <span class="kio-logo"><i class="fa fa-wrench"/></span>
                         <h1>Maintenance &amp; Repair Dashboard</h1>
                     </div>
-                    <label class="kio-search">
-                        <i class="fa fa-search"/>
-                        <input type="search" placeholder="Search..." t-model="state.query"/>
-                    </label>
                     <div class="kio-header-actions">
                         <button class="kio-icon-button" type="button"><i class="fa fa-comments"/><span class="kio-badge">7</span></button>
                         <button class="kio-icon-button" type="button"><i class="fa fa-bell"/><span class="kio-badge">15</span></button>
