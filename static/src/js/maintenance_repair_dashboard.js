@@ -218,4 +218,7 @@ export class MaintenanceRepairDashboard extends Component {
     }
 }
 
-registry.category("actions").add("kio_maintenance_repair_dashboard.action", MaintenanceRepairDashboard);
+// Register the backend client-action tag used by views/dashboard_action.xml.
+registry
+    .category("actions")
+    .add("kio_maintenance_repair_dashboard.maintenance_repair_dashboard", MaintenanceRepairDashboard);

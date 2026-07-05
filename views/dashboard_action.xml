@@ -1,14 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Backend client action: loads the OWL dashboard in the normal Odoo content area. -->
     <record id="action_maintenance_repair_dashboard" model="ir.actions.client">
         <field name="name">Maintenance &amp; Repair Dashboard</field>
-        <field name="tag">kio_maintenance_repair_dashboard.action</field>
-        <field name="target">fullscreen</field>
+        <field name="tag">kio_maintenance_repair_dashboard.maintenance_repair_dashboard</field>
+        <!-- target="main" keeps the top navbar while clearing previous breadcrumbs/action stack. -->
+        <field name="target">main</field>
+        <field name="context">{'no_breadcrumbs': True}</field>
     </record>
 
+    <!-- Root application menu. The dashboard itself is opened from the child menu. -->
     <menuitem
-        id="menu_maintenance_repair_dashboard_root"
-        name="Maintenance Dashboard"
-        sequence="10"
-        action="action_maintenance_repair_dashboard"/>
+        id="menu_maintenance_repair_root"
+        name="Maintenance &amp; Repair"
+        sequence="10"/>
+
+    <menuitem
+        id="menu_maintenance_repair_dashboard"
+        name="Dashboard"
+        parent="menu_maintenance_repair_root"
+        action="action_maintenance_repair_dashboard"
+        sequence="10"/>
 </odoo>
