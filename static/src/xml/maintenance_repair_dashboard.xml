@@ -36,17 +36,6 @@
                 <div class="kio-loading"><i class="fa fa-spinner fa-spin"/> Loading dashboard...</div>
             </t>
             <t t-else="">
-                <header class="kio-topbar">
-                    <div class="kio-brand">
-                        <span class="kio-logo"><i class="fa fa-wrench"/></span>
-                        <h1>Maintenance &amp; Repair Dashboard</h1>
-                    </div>
-                    <div class="kio-filter-row">
-                        <button class="kio-date-button" type="button"><t t-esc="state.data.period.label"/><i class="fa fa-calendar"/></button>
-                        <button class="kio-filter-button" type="button"><i class="fa fa-filter"/>Filters<i class="fa fa-chevron-down"/></button>
-                    </div>
-                </header>
-
                 <main class="kio-dashboard-content">
                     <section class="kio-kpi-grid">
                         <t t-foreach="state.data.kpis" t-as="kpi" t-key="kpi.key">
