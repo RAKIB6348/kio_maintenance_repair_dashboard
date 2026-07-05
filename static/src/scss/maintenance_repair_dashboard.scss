@@ -1,0 +1,595 @@
+.kio-dashboard-shell {
+    --kio-primary: #4F46E5;
+    --kio-success: #22C55E;
+    --kio-warning: #F59E0B;
+    --kio-danger: #EF4444;
+    --kio-info: #06B6D4;
+    --kio-bg: #F8FAFC;
+    --kio-card: #FFFFFF;
+    --kio-text: #0F172A;
+    --kio-muted: #64748B;
+    --kio-line: #E2E8F0;
+    min-height: 100vh;
+    width: 100%;
+    background: var(--kio-bg);
+    color: var(--kio-text);
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+    button {
+        font: inherit;
+    }
+}
+
+.kio-loading {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+    gap: 12px;
+    color: var(--kio-primary);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.kio-topbar {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(320px, 560px) minmax(420px, 1.1fr);
+    align-items: center;
+    gap: 24px;
+    padding: 18px 28px 14px;
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(16px);
+}
+
+.kio-brand {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 14px;
+
+    h1 {
+        margin: 0;
+        font-size: 23px;
+        line-height: 1.2;
+        font-weight: 800;
+        letter-spacing: 0;
+        color: #111827;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+.kio-logo,
+.kio-gradient-icon,
+.kio-analytic-icon {
+    display: inline-grid;
+    place-items: center;
+    color: white;
+    box-shadow: 0 12px 26px rgba(79, 70, 229, 0.22);
+}
+
+.kio-logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2563EB, #4F46E5);
+    font-size: 18px;
+}
+
+.kio-search {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 50px;
+    min-width: 0;
+    padding: 0 18px;
+    border: 1px solid var(--kio-line);
+    border-radius: 12px;
+    background: white;
+    color: #475569;
+    box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.02);
+
+    input {
+        min-width: 0;
+        width: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--kio-text);
+        font-size: 14px;
+        font-weight: 600;
+    }
+}
+
+.kio-header-actions,
+.kio-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    min-width: 0;
+}
+
+.kio-filter-row {
+    grid-column: 1 / -1;
+    margin-top: 2px;
+}
+
+.kio-icon-button,
+.kio-company,
+.kio-user,
+.kio-date-button,
+.kio-filter-button,
+.kio-panel-head button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid var(--kio-line);
+    background: #FFFFFF;
+    color: #0F172A;
+    border-radius: 10px;
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+        border-color: #CBD5E1;
+        box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+    }
+}
+
+.kio-icon-button {
+    position: relative;
+    width: 38px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: 20px;
+}
+
+.kio-badge {
+    position: absolute;
+    top: -3px;
+    right: -4px;
+    display: grid;
+    min-width: 18px;
+    height: 18px;
+    place-items: center;
+    border-radius: 999px;
+    background: #EF4444;
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.kio-avatar {
+    display: inline-grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FDBA74, #FB7185);
+    color: white;
+}
+
+.kio-filter-button {
+    color: #6D28D9;
+}
+
+.kio-dashboard-content {
+    display: grid;
+    gap: 18px;
+    padding: 18px 22px 28px;
+}
+
+.kio-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(170px, 1fr));
+    gap: 16px;
+}
+
+.kio-kpi-card,
+.kio-panel,
+.kio-bottom-strip {
+    border: 1px solid rgba(226, 232, 240, 0.86);
+    border-radius: 16px;
+    background: var(--kio-card);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+}
+
+.kio-kpi-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    min-height: 148px;
+    padding: 20px;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 22px 42px rgba(15, 23, 42, 0.1);
+    }
+}
+
+.kio-gradient-icon {
+    flex: 0 0 auto;
+    width: 58px;
+    height: 58px;
+    border-radius: 14px;
+    font-size: 26px;
+}
+
+.kio-gradient-primary { background: linear-gradient(135deg, #7C3AED, #4F46E5); }
+.kio-gradient-success { background: linear-gradient(135deg, #16A34A, #22C55E); }
+.kio-gradient-info { background: linear-gradient(135deg, #0284C7, #06B6D4); }
+.kio-gradient-warning { background: linear-gradient(135deg, #F97316, #F59E0B); }
+.kio-gradient-danger { background: linear-gradient(135deg, #DC2626, #EF4444); }
+.kio-gradient-teal { background: linear-gradient(135deg, #0D9488, #06B6D4); }
+
+.kio-kpi-content {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+}
+
+.kio-kpi-title,
+.kio-bottom-title {
+    color: #1E293B;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.kio-kpi-value {
+    color: #0F172A;
+    font-size: 27px;
+    font-weight: 850;
+    line-height: 1;
+}
+
+.kio-kpi-meta,
+.kio-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.kio-up { color: #16A34A; }
+.kio-down { color: #EF4444; }
+.kio-kpi-status { font-size: 13px; font-weight: 800; }
+.kio-text-primary { color: #4F46E5; }
+.kio-text-success { color: #16A34A; }
+.kio-text-info { color: #0875E1; }
+.kio-text-warning { color: #F97316; }
+.kio-text-danger { color: #EF4444; }
+.kio-text-teal { color: #0D9488; }
+
+.kio-main-grid,
+.kio-table-grid,
+.kio-analytics-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.kio-main-grid {
+    grid-template-columns: 1.18fr 0.9fr 0.9fr;
+}
+
+.kio-table-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.kio-analytics-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.kio-panel {
+    min-width: 0;
+    padding: 18px 20px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    }
+}
+
+.kio-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    h2 {
+        margin: 0;
+        color: #111827;
+        font-size: 16px;
+        font-weight: 850;
+        line-height: 1.2;
+    }
+
+    button {
+        min-height: 32px;
+        color: #6D28D9;
+        font-size: 12px;
+        border-radius: 8px;
+    }
+}
+
+.kio-chart {
+    position: relative;
+    height: 250px;
+}
+
+.kio-chart-line {
+    height: 255px;
+}
+
+.kio-table-wrap {
+    overflow-x: auto;
+}
+
+.kio-table {
+    width: 100%;
+    min-width: 620px;
+    border-collapse: collapse;
+
+    th,
+    td {
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.68);
+        color: #172033;
+        font-size: 12px;
+        font-weight: 650;
+        text-align: left;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    th {
+        color: #334155;
+        font-size: 11px;
+        font-weight: 850;
+    }
+
+    tr {
+        cursor: pointer;
+    }
+
+    tbody tr:hover td {
+        background: #F8FAFC;
+    }
+}
+
+.kio-link {
+    color: #0057FF !important;
+    font-weight: 850 !important;
+}
+
+.kio-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 0 9px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 850;
+}
+
+.kio-priority-urgent,
+.kio-status-overdue,
+.kio-status-cancelled { background: #FEE2E2; color: #DC2626; }
+.kio-priority-high,
+.kio-status-on-hold { background: #FFEDD5; color: #EA580C; }
+.kio-priority-medium,
+.kio-status-new { background: #DBEAFE; color: #2563EB; }
+.kio-priority-low,
+.kio-status-done,
+.kio-status-repaired { background: #DCFCE7; color: #16A34A; }
+.kio-status-in-progress { background: #E0F2FE; color: #0875E1; }
+
+.kio-downtime-list {
+    display: grid;
+    gap: 12px;
+}
+
+.kio-downtime-head,
+.kio-downtime-row {
+    display: grid;
+    grid-template-columns: minmax(140px, 1.3fr) minmax(130px, 1fr) 64px;
+    align-items: center;
+    gap: 14px;
+}
+
+.kio-downtime-head {
+    color: #334155;
+    font-size: 11px;
+    font-weight: 850;
+}
+
+.kio-downtime-row {
+    min-height: 31px;
+    border: 0;
+    background: transparent;
+    color: #172033;
+    text-align: left;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 750;
+
+    &:hover {
+        color: #4F46E5;
+    }
+}
+
+.kio-progress {
+    display: inline-flex;
+    width: 92px;
+    height: 6px;
+    margin-left: 12px;
+    border-radius: 999px;
+    background: #E2E8F0;
+    overflow: hidden;
+    vertical-align: middle;
+
+    i {
+        display: block;
+        border-radius: inherit;
+    }
+}
+
+.kio-progress-danger i { background: #EF4444; }
+.kio-progress-warning i { background: #F97316; }
+.kio-progress-amber i { background: #F59E0B; }
+.kio-progress-success i { background: #22C55E; }
+.kio-progress-info i { background: #0875E1; }
+
+.kio-analytic-card {
+    position: relative;
+    display: grid;
+    min-height: 172px;
+    gap: 10px;
+
+    h2 {
+        max-width: 78%;
+        margin: 0 0 12px;
+        font-size: 16px;
+        font-weight: 850;
+    }
+
+    p {
+        margin: 0 0 8px;
+        color: #0F172A;
+        font-size: 25px;
+        font-weight: 850;
+    }
+}
+
+.kio-analytic-icon {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    font-size: 20px;
+}
+
+.kio-mini-chart,
+.kio-cost-chart {
+    position: relative;
+    height: 62px;
+}
+
+.kio-cost-card {
+    .kio-panel-head { margin-bottom: 4px; }
+}
+
+.kio-cost-chart {
+    height: 112px;
+}
+
+.kio-bottom-strip {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(130px, 1fr));
+    padding: 10px 14px;
+}
+
+.kio-bottom-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-height: 62px;
+    padding: 8px 18px;
+    border: 0;
+    border-right: 1px solid var(--kio-line);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+
+    &:last-child {
+        border-right: 0;
+    }
+
+    &:hover .kio-bottom-icon {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 22px rgba(15, 23, 42, 0.1);
+    }
+}
+
+.kio-bottom-icon {
+    display: inline-grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: 12px;
+    background: #F1F5F9;
+    color: #0F172A;
+    font-size: 19px;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.kio-bottom-value {
+    display: block;
+    color: #0F172A;
+    font-size: 22px;
+    font-weight: 850;
+    line-height: 1.1;
+}
+
+.kio-bottom-danger .kio-bottom-icon { background: #FEE2E2; color: #EF4444; }
+.kio-bottom-warning .kio-bottom-icon { background: #FFEDD5; color: #F97316; }
+.kio-bottom-primary .kio-bottom-icon { background: #EDE9FE; color: #7C3AED; }
+
+@media (max-width: 1400px) {
+    .kio-topbar { grid-template-columns: 1fr minmax(260px, 420px); }
+    .kio-header-actions { grid-column: 1 / -1; }
+    .kio-kpi-grid { grid-template-columns: repeat(3, minmax(190px, 1fr)); }
+    .kio-main-grid,
+    .kio-table-grid { grid-template-columns: 1fr; }
+    .kio-analytics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+    .kio-topbar {
+        position: static;
+        grid-template-columns: 1fr;
+        padding: 16px;
+    }
+
+    .kio-brand h1 { white-space: normal; font-size: 20px; }
+    .kio-header-actions,
+    .kio-filter-row { justify-content: flex-start; flex-wrap: wrap; }
+    .kio-dashboard-content { padding: 14px; }
+    .kio-kpi-grid,
+    .kio-analytics-grid,
+    .kio-bottom-strip { grid-template-columns: 1fr; }
+    .kio-bottom-item { border-right: 0; border-bottom: 1px solid var(--kio-line); }
+    .kio-bottom-item:last-child { border-bottom: 0; }
+    .kio-chart { height: 230px; }
+}
+
+@media (max-width: 560px) {
+    .kio-kpi-card { min-height: 132px; padding: 16px; }
+    .kio-gradient-icon { width: 50px; height: 50px; font-size: 22px; }
+    .kio-kpi-value { font-size: 24px; }
+    .kio-downtime-head,
+    .kio-downtime-row { grid-template-columns: 1fr; gap: 5px; }
+    .kio-progress { width: 55vw; max-width: 180px; }
+}

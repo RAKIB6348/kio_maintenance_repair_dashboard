@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="kio_maintenance_repair_dashboard.KpiCard">
+        <button type="button" t-att-class="'kio-kpi-card kio-clickable kio-card-accent-' + props.kpi.color" t-on-click="() => props.onOpen(props.kpi)">
+            <span t-att-class="'kio-gradient-icon kio-gradient-' + props.kpi.color">
+                <i t-att-class="'fa ' + iconClass(props.kpi.icon)"/>
+            </span>
+            <span class="kio-kpi-content">
+                <span class="kio-kpi-title" t-esc="props.kpi.title"/>
+                <span class="kio-kpi-value" t-esc="props.kpi.value"/>
+                <span class="kio-kpi-meta">
+                    <span t-att-class="props.kpi.trend === 'up' ? 'kio-change kio-up' : 'kio-change kio-down'">
+                        <i t-att-class="props.kpi.trend === 'up' ? 'fa fa-caret-up' : 'fa fa-caret-down'"/>
+                        <t t-esc="Math.abs(props.kpi.change)"/>%
+                    </span>
+                    <span>vs last month</span>
+                </span>
+                <span t-att-class="'kio-kpi-status kio-text-' + props.kpi.color" t-esc="props.kpi.status"/>
+            </span>
+        </button>
+    </t>
+
+    <t t-name="kio_maintenance_repair_dashboard.BottomKpi">
+        <button type="button" t-att-class="'kio-bottom-item kio-bottom-' + props.item.color">
+            <span class="kio-bottom-icon"><i t-att-class="'fa ' + iconClass(props.item.icon)"/></span>
+            <span>
+                <span class="kio-bottom-title" t-esc="props.item.title"/>
+                <span class="kio-bottom-value" t-esc="props.item.value"/>
+            </span>
+        </button>
+    </t>
+
+    <t t-name="kio_maintenance_repair_dashboard.MaintenanceRepairDashboard">
+        <div class="kio-dashboard-shell">
+            <t t-if="state.loading">
+                <div class="kio-loading"><i class="fa fa-spinner fa-spin"/> Loading dashboard...</div>
+            </t>
+            <t t-else="">
+                <header class="kio-topbar">
+                    <div class="kio-brand">
+                        <span class="kio-logo"><i class="fa fa-wrench"/></span>
+                        <h1>Maintenance &amp; Repair Dashboard</h1>
+                    </div>
+                    <label class="kio-search">
+                        <i class="fa fa-search"/>
+                        <input type="search" placeholder="Search..." t-model="state.query"/>
+                    </label>
+                    <div class="kio-header-actions">
+                        <button class="kio-icon-button" type="button"><i class="fa fa-comments"/><span class="kio-badge">7</span></button>
+                        <button class="kio-icon-button" type="button"><i class="fa fa-bell"/><span class="kio-badge">15</span></button>
+                        <button class="kio-icon-button" type="button"><i class="fa fa-clock"/></button>
+                        <button class="kio-company" type="button"><t t-esc="companyName"/><i class="fa fa-chevron-down"/></button>
+                        <button class="kio-user" type="button"><span class="kio-avatar"><i class="fa fa-user"/></span><t t-esc="userName"/><i class="fa fa-chevron-down"/></button>
+                    </div>
+                    <div class="kio-filter-row">
+                        <button class="kio-date-button" type="button"><t t-esc="state.data.period.label"/><i class="fa fa-calendar"/></button>
+                        <button class="kio-filter-button" type="button"><i class="fa fa-filter"/>Filters<i class="fa fa-chevron-down"/></button>
+                    </div>
+                </header>
+
+                <main class="kio-dashboard-content">
+                    <section class="kio-kpi-grid">
+                        <t t-foreach="state.data.kpis" t-as="kpi" t-key="kpi.key">
+                            <KioKpiCard kpi="kpi" onOpen.bind="openKpi"/>
+                        </t>
+                    </section>
+
+                    <section class="kio-main-grid">
+                        <article class="kio-panel kio-panel-wide">
+                            <div class="kio-panel-head"><h2>Requests Trend</h2><button type="button">Daily <i class="fa fa-chevron-down"/></button></div>
+                            <div class="kio-chart kio-chart-line"><canvas t-ref="trendChart"/></div>
+                        </article>
+                        <article class="kio-panel">
+                            <div class="kio-panel-head"><h2>Requests by Category</h2></div>
+                            <div class="kio-chart"><canvas t-ref="categoryChart"/></div>
+                        </article>
+                        <article class="kio-panel">
+                            <div class="kio-panel-head"><h2>Orders by Status</h2></div>
+                            <div class="kio-chart"><canvas t-ref="statusChart"/></div>
+                        </article>
+                    </section>
+
+                    <section class="kio-table-grid">
+                        <article class="kio-panel">
+                            <div class="kio-panel-head"><h2>Recent Maintenance Requests</h2><button type="button" t-on-click="() => openSection('Maintenance Requests')">View All</button></div>
+                            <div class="kio-table-wrap"><table class="kio-table"><thead><tr><th>Request No</th><th>Equipment</th><th>Priority</th><th>Requested Date</th><th>Status</th></tr></thead><tbody>
+                                <t t-foreach="state.data.recent_maintenance" t-as="row" t-key="row.id"><tr t-on-click="() => openMaintenance(row)"><td class="kio-link" t-esc="row.request_no"/><td t-esc="row.equipment"/><td><span t-att-class="priorityClass(row.priority)" t-esc="row.priority"/></td><td t-esc="row.date"/><td><span t-att-class="statusClass(row.status)" t-esc="row.status"/></td></tr></t>
+                            </tbody></table></div>
+                        </article>
+                        <article class="kio-panel">
+                            <div class="kio-panel-head"><h2>Recent Repair Orders</h2><button type="button" t-on-click="() => openSection('Repair Orders')">View All</button></div>
+                            <div class="kio-table-wrap"><table class="kio-table"><thead><tr><th>Repair Order</th><th>Equipment</th><th>Priority</th><th>Repair Date</th><th>Status</th></tr></thead><tbody>
+                                <t t-foreach="state.data.recent_repairs" t-as="row" t-key="row.id"><tr t-on-click="() => openRepair(row)"><td class="kio-link" t-esc="row.repair_order"/><td t-esc="row.equipment"/><td><span t-att-class="priorityClass(row.priority)" t-esc="row.priority"/></td><td t-esc="row.date"/><td><span t-att-class="statusClass(row.status)" t-esc="row.status"/></td></tr></t>
+                            </tbody></table></div>
+                        </article>
+                        <article class="kio-panel">
+                            <div class="kio-panel-head"><h2>Top 5 Equipment by Downtime</h2><button type="button" t-on-click="() => openSection('Equipment Downtime')">View All</button></div>
+                            <div class="kio-downtime-list">
+                                <div class="kio-downtime-head"><span>Equipment</span><span>Downtime (hrs)</span><span># Orders</span></div>
+                                <t t-foreach="state.data.equipment_downtime" t-as="row" t-key="row.equipment">
+                                    <button type="button" class="kio-downtime-row" t-on-click="() => openSection(row.equipment)"><span t-esc="row.equipment"/><span><t t-esc="row.downtime"/><i t-att-class="'kio-progress kio-progress-' + row.color"><i t-att-style="'width:' + row.percent + '%'"/></i></span><span t-esc="row.orders"/></button>
+                                </t>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section class="kio-analytics-grid">
+                        <article class="kio-panel kio-analytic-card"><div><h2 t-esc="state.data.analytics.downtime.title"/><p t-esc="state.data.analytics.downtime.value"/><span class="kio-change kio-down"><i class="fa fa-caret-down"/> <t t-esc="Math.abs(state.data.analytics.downtime.change)"/>% vs last month</span></div><span class="kio-analytic-icon kio-gradient-primary"><i class="fa fa-clock"/></span><div class="kio-mini-chart"><canvas t-ref="downtimeChart"/></div></article>
+                        <article class="kio-panel kio-analytic-card"><div><h2 t-esc="state.data.analytics.mttr.title"/><p t-esc="state.data.analytics.mttr.value"/><span class="kio-change kio-up"><i class="fa fa-caret-up"/> <t t-esc="state.data.analytics.mttr.change"/>% vs last month</span></div><span class="kio-analytic-icon kio-gradient-info"><i class="fa fa-wrench"/></span><div class="kio-mini-chart"><canvas t-ref="mttrChart"/></div></article>
+                        <article class="kio-panel kio-analytic-card"><div><h2 t-esc="state.data.analytics.mtbf.title"/><p t-esc="state.data.analytics.mtbf.value"/><span class="kio-change kio-up"><i class="fa fa-caret-up"/> <t t-esc="state.data.analytics.mtbf.change"/>% vs last month</span></div><span class="kio-analytic-icon kio-gradient-success"><i class="fa fa-line-chart"/></span><div class="kio-mini-chart"><canvas t-ref="mtbfChart"/></div></article>
+                        <article class="kio-panel kio-analytic-card kio-cost-card"><div class="kio-panel-head"><h2>Maintenance Cost Trend</h2><button type="button">This Month <i class="fa fa-chevron-down"/></button></div><div class="kio-cost-chart"><canvas t-ref="costChart"/></div></article>
+                    </section>
+
+                    <section class="kio-bottom-strip">
+                        <t t-foreach="state.data.bottom_kpis" t-as="item" t-key="item.title"><KioBottomKpi item="item"/></t>
+                    </section>
+                </main>
+            </t>
+        </div>
+    </t>
+</templates>
