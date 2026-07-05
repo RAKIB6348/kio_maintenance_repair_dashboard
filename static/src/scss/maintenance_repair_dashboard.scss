@@ -90,7 +90,6 @@
     font-size: 18px;
 }
 
-.kio-header-actions,
 .kio-filter-row {
     display: flex;
     align-items: center;
@@ -100,13 +99,10 @@
 }
 
 .kio-filter-row {
-    grid-column: 1 / -1;
-    margin-top: 2px;
+    grid-column: 2;
+    margin-top: 0;
 }
 
-.kio-icon-button,
-.kio-company,
-.kio-user,
 .kio-date-button,
 .kio-filter-button,
 .kio-panel-head button {
@@ -130,40 +126,6 @@
         border-color: #CBD5E1;
         box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
     }
-}
-
-.kio-icon-button {
-    position: relative;
-    width: 38px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    font-size: 20px;
-}
-
-.kio-badge {
-    position: absolute;
-    top: -3px;
-    right: -4px;
-    display: grid;
-    min-width: 18px;
-    height: 18px;
-    place-items: center;
-    border-radius: 999px;
-    background: #EF4444;
-    color: #FFFFFF;
-    font-size: 10px;
-    font-weight: 800;
-}
-
-.kio-avatar {
-    display: inline-grid;
-    width: 28px;
-    height: 28px;
-    place-items: center;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #FDBA74, #FB7185);
-    color: white;
 }
 
 .kio-filter-button {
@@ -592,7 +554,6 @@
 
 @media (max-width: 1400px) {
     .kio-topbar { grid-template-columns: 1fr; }
-    .kio-header-actions { grid-column: 1 / -1; }
     .kio-kpi-grid { grid-template-columns: repeat(3, minmax(190px, 1fr)); }
     .kio-main-grid,
     .kio-table-grid { grid-template-columns: 1fr; }
@@ -607,7 +568,6 @@
     }
 
     .kio-brand h1 { white-space: normal; font-size: 20px; }
-    .kio-header-actions,
     .kio-filter-row { justify-content: flex-start; flex-wrap: wrap; }
     .kio-dashboard-content { padding: 14px; }
     .kio-kpi-grid,
