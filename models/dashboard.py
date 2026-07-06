@@ -75,14 +75,14 @@ class MaintenanceRepairDashboard(models.AbstractModel):
                           f"{repair_orders_this_month} This Month", "repair", "info"),
 
                 # নতুন যোগ করা হলো
-                self._kpi("repair_new", "New Repair", repair_states["new"], 0, "New", "repair", "warning"),
-                self._kpi("repair_confirmed", "Confirmed Repair", repair_states["confirmed"], 0, "Confirmed", "repair",
-                          "primary"),
-                self._kpi("repair_under", "Under Repair", repair_states["under_repair"], 0, "In Progress", "repair",
-                          "danger"),
-                self._kpi("repair_repaired", "Repaired", repair_states["repaired"], 0, "Done", "repair", "success"),
-                self._kpi("repair_cancelled", "Cancelled Repair", repair_states["cancelled"], 0, "Cancelled", "repair",
-                          "danger"),
+                self._kpi("repair_new", "New Repair", repair_states.get("draft", 0), 0, "New", "repair", "warning"),
+                self._kpi("repair_confirmed", "Confirmed Repair", repair_states.get("confirmed", 0), 0, "Confirmed",
+                          "repair", "primary"),
+                self._kpi("repair_under", "Under Repair", repair_states.get("under_repair", 0), 0, "In Progress",
+                          "repair", "danger"),
+                self._kpi("repair_repaired", "Repaired", repair_states.get("done", 0), 0, "Done", "repair", "success"),
+                self._kpi("repair_cancelled", "Cancelled Repair", repair_states.get("cancel", 0), 0, "Cancelled",
+                          "repair", "danger"),
             ],
             "charts": {
                 "requests_trend": self._requests_trend(maintenance_model, repair_model, start_date, end_date),
@@ -221,48 +221,25 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             data = [16, 10, 8, 5, 3]
         return {"labels": labels, "data": data}
 
-
+    # KIO CUSTOM: Dynamic repair.order status chart from actual state selection.
     def _status_chart(self, repair_model, maintenance_model=False, start_date=False, end_date=False):
-        """Fixed Status Chart for Repair Orders"""
-
-        labels = ["New", "Confirmed", "Under Repair", "Repaired", "Cancelled"]
-
-        # State mapping
-        state_to_label = {
-            "draft": "New",
-            "confirmed": "Confirmed",
-            "under_repair": "Under Repair",
-            "done": "Repaired",
-            "cancel": "Cancelled",
-        }
-
         if repair_model is False or "state" not in repair_model._fields:
-            return {"labels": labels, "data": [2, 0, 0, 1, 0]}  # fallback
+            return {"labels": [], "data": []}
 
-        # Get all repair orders (or filtered by date if you want)
-        domain = self._base_domain(repair_model, start_date, end_date) if start_date and end_date else []
+        state_selection = dict(repair_model._fields["state"].selection)
+        state_order = list(state_selection.keys())
 
-        records = repair_model.search(domain)
+        records = repair_model.search([])
 
-        counts = {label: 0 for label in labels}
+        counts = {state: 0 for state in state_order}
 
         for record in records:
-            state = record.state
-            label = state_to_label.get(state, "New")  # default to New if unknown
-            if label in counts:
-                counts[label] += 1
-
-        data = [counts[label] for label in labels]
-
-        # Debug: Server log-এ দেখতে চাইলে
-        print("=== Status Chart Debug ===")
-        print(f"Total Records: {len(records)}")
-        print(f"Counts: {counts}")
-        print("=========================")
+            if record.state in counts:
+                counts[record.state] += 1
 
         return {
-            "labels": labels,
-            "data": data,
+            "labels": [state_selection[state] for state in state_order],
+            "data": [counts[state] for state in state_order],
         }
 
     def _ids_domain(self, record_ids):
@@ -397,31 +374,18 @@ class MaintenanceRepairDashboard(models.AbstractModel):
              "date": "2025-05-26", "status": "Cancelled"},
         ]
 
-    # KIO CUSTOM: Count repair.order records by actual repair state values.
+    # KIO CUSTOM: Dynamic repair.order state-wise counts.
     def _get_repair_states_count(self, repair_model):
-        counts = {
-            "new": 0,
-            "confirmed": 0,
-            "under_repair": 0,
-            "repaired": 0,
-            "cancelled": 0,
-        }
+        if repair_model is False or "state" not in repair_model._fields:
+            return {}
 
-        if repair_model is False:
-            return counts
+        state_selection = dict(repair_model._fields["state"].selection)
+        counts = {state: 0 for state in state_selection.keys()}
 
         records = repair_model.search([])
 
         for record in records:
-            if record.state == "draft":
-                counts["new"] += 1
-            elif record.state == "confirmed":
-                counts["confirmed"] += 1
-            elif record.state == "under_repair":
-                counts["under_repair"] += 1
-            elif record.state == "done":
-                counts["repaired"] += 1
-            elif record.state == "cancel":
-                counts["cancelled"] += 1
+            if record.state in counts:
+                counts[record.state] += 1
 
         return counts

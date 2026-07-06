@@ -245,7 +245,7 @@ export class MaintenanceRepairDashboard extends Component {
         ));
         this.charts.push(new Chart(this.statusChart.el, this.doughnutConfig(
             data.charts.status,
-            ["#0875E1", "#F97316", "#FBBF24", "#22C55E", "#94A3B8"],
+            ["#0875E1", "#F97316", "#FBBF24", "#22C55E", "#94A3B8", "#8B5CF6", "#EC4899"],
             [this.doughnutCenterTextPlugin("Total Orders")]
         )));
         this.charts.push(new Chart(this.downtimeChart.el, this.miniLineConfig(data.charts.downtime, COLORS.primary, true)));
