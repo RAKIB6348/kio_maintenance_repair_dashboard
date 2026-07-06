@@ -140,8 +140,24 @@ export class MaintenanceRepairDashboard extends Component {
         this.action.doAction({ type: "ir.actions.act_window", res_model: "repair.order", res_id: row.id, views: [[false, "form"]], target: "current" });
     }
 
-    openSection(name) {
-        this.notification.add(`${name} drill-down is ready to configure.`, { type: "info" });
+    async openSection(name) {
+        if (name !== "Maintenance Requests") {
+            this.notification.add(`${name} drill-down is ready to configure.`, { type: "info" });
+            return;
+        }
+        try {
+            await this.action.doAction({
+                type: "ir.actions.act_window",
+                name: "Recent Maintenance Requests",
+                res_model: "maintenance.request",
+                domain: this.state.data.recent_maintenance_domain || [],
+                view_mode: "kanban,tree,form",
+                views: [[false, "kanban"], [false, "tree"], [false, "form"]],
+                target: "current",
+            });
+        } catch {
+            this.notification.add("Unable to open Maintenance Requests.", { type: "danger" });
+        }
     }
 
     priorityClass(value) {

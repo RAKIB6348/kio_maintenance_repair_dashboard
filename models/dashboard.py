@@ -40,6 +40,8 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         overdue_orders = self._overdue_count(maintenance_model, today) + self._overdue_count(repair_model, today)
         maintenance_cost = self._maintenance_cost(repair_model, start_date, end_date)
         previous_cost = self._maintenance_cost(repair_model, previous_start, previous_end)
+        recent_maintenance = self._recent_maintenance(maintenance_model, start_date, end_date)
+        recent_maintenance_domain = self._ids_domain([row["id"] for row in recent_maintenance])
 
         return {
             "period": {"label": "%s - %s" % (start_date.strftime("%b %d, %Y"), end_date.strftime("%b %d, %Y"))},
@@ -60,7 +62,8 @@ class MaintenanceRepairDashboard(models.AbstractModel):
                 "mtbf": self._mini_series(31, 80, 160),
                 "cost": self._cost_trend(repair_model, start_date, end_date),
             },
-            "recent_maintenance": self._recent_maintenance(maintenance_model),
+            "recent_maintenance": recent_maintenance,
+            "recent_maintenance_domain": recent_maintenance_domain,
             "recent_repairs": self._recent_repairs(repair_model),
             "equipment_downtime": self._equipment_downtime(maintenance_model),
             "analytics": {
@@ -199,8 +202,13 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             data = [14, 7, 3, 2]
         return {"labels": labels, "data": data}
 
-    def _recent_maintenance(self, model):
-        records = model.search([], limit=5, order="id desc") if model else []
+    def _ids_domain(self, record_ids):
+        return [["id", "in", record_ids]] if record_ids else [["id", "=", False]]
+
+    def _recent_maintenance(self, model, start_date, end_date):
+        order_field = self._field(model, ["request_date", "create_date"])
+        order = "%s desc" % order_field if order_field else "id desc"
+        records = model.search(self._base_domain(model, start_date, end_date), limit=5, order=order) if model else []
         rows = []
         for record in records:
             rows.append({
@@ -211,7 +219,7 @@ class MaintenanceRepairDashboard(models.AbstractModel):
                 "date": self._format_date(record, ["request_date", "create_date"]),
                 "status": record.stage_id.display_name if "stage_id" in record._fields and record.stage_id else "New",
             })
-        return rows or self._sample_maintenance()
+        return rows
 
     def _recent_repairs(self, model):
         records = model.search([], limit=5, order="id desc") if model else []
