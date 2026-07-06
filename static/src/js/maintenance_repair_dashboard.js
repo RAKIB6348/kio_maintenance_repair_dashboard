@@ -58,6 +58,11 @@ export class MaintenanceRepairDashboard extends Component {
         this.state = useState({ loading: true, data: null, query: "" });
         this.charts = [];
 
+        this.openKpi = this.openKpi.bind(this);
+        this.openMaintenance = this.openMaintenance.bind(this);
+        this.openRepair = this.openRepair.bind(this);
+        this.openSection = this.openSection.bind(this);
+
         this.trendChart = useRef("trendChart");
         this.categoryChart = useRef("categoryChart");
         this.statusChart = useRef("statusChart");
