@@ -63,37 +63,22 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             repair_model,
             self._date_domain(repair_model, today, today)
         )
+        # ================== REPAIR STATES ==================
+        repair_states = self._get_repair_states_count(repair_model)
+        # ===================================================
 
         return {
             "period": {"label": "%s - %s" % (start_date.strftime("%b %d, %Y"), end_date.strftime("%b %d, %Y"))},
             "kpis": [
-                self._kpi(
-                    "today_maintenance_requests",
-                    "Today's Maintenance Requests",
-                    today_maintenance_requests,
-                    0,
-                    "Today",
-                    "maintenance",
-                    "primary",
-                ),
+                self._kpi("today_maintenance_requests", "Today's Maintenance", today_maintenance_requests, 0, "Today", "maintenance", "primary"),
+                self._kpi("maintenance_orders", "Maintenance Orders", total_maintenance_orders, total_maintenance_orders_previous, f"{maintenance_orders_this_month} This Month", "maintenance", "success"),
 
-                self._kpi("maintenance_orders", "Maintenance Orders", total_maintenance_orders,
-                          total_maintenance_orders_previous,
-                          f"{maintenance_orders_this_month} This Month", "maintenance", "success"),
+                # নতুন যোগ করা হলো
+                self._kpi("repair_new", "New Repair", repair_states['new'], 0, "New", "repair", "warning"),
+                self._kpi("repair_under", "Under Repair", repair_states['under_repair'], 0, "In Progress", "repair", "danger"),
+                self._kpi("repair_repaired", "Repaired", repair_states['repaired'], 0, "Done", "repair", "success"),
 
-                self._kpi(
-                    "today_repair_orders",
-                    "Today's Repair Orders",
-                    today_repair_orders,
-                    0,
-                    "Today",
-                    "repair",
-                    "info",
-                ),
-
-                # মোট Repair Orders দেখাবে (সবসময়, month filter ছাড়া) + এই মাসে কত আছে তাও info হিসেবে দেখাবে
-                self._kpi("repair_orders", "Repair Orders", total_repair_orders, total_repair_orders_previous,
-                          f"{repair_orders_this_month} This Month", "repair", "info"),
+                self._kpi("repair_orders", "Repair Orders", total_repair_orders, total_repair_orders_previous, f"{repair_orders_this_month} This Month", "repair", "info"),
             ],
             "charts": {
                 "requests_trend": self._requests_trend(maintenance_model, repair_model, start_date, end_date),
@@ -407,3 +392,23 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             {"id": 5, "repair_order": "RO/2025/0019", "equipment": "Packaging Machine - 03", "priority": "High",
              "date": "2025-05-26", "status": "Cancelled"},
         ]
+
+
+    def _get_repair_states_count(self, repair_model):
+        if repair_model is False:
+            return {'new': 2, 'under_repair': 1, 'repaired': 3, 'cancelled': 0}
+
+        records = repair_model.search([])
+        counts = {'new': 0, 'under_repair': 0, 'repaired': 0, 'cancelled': 0}
+
+        for r in records:
+            if r.state == 'draft':
+                counts['new'] += 1
+            elif r.state == 'under_repair':
+                counts['under_repair'] += 1
+            elif r.state == 'done':
+                counts['repaired'] += 1
+            elif r.state == 'cancel':
+                counts['cancelled'] += 1
+
+        return counts
