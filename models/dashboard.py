@@ -22,10 +22,6 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         repair_model = self._model("repair.order")
         equipment_model = self._model("maintenance.equipment")
 
-        total_requests = self._count(maintenance_model, self._date_domain(maintenance_model, start_date, end_date))
-        previous_requests = self._count(maintenance_model,
-                                        self._date_domain(maintenance_model, previous_start, previous_end))
-
         # এই মাসে মোট কত Maintenance Order আছে (type নির্বিশেষে - preventive/corrective সব মিলিয়ে)
         maintenance_orders_this_month = self._count(
             maintenance_model,
@@ -49,9 +45,6 @@ class MaintenanceRepairDashboard(models.AbstractModel):
 
         # এই মাস শুরু হওয়ার আগে পর্যন্ত মোট কত repair order ছিল - এটাই তুলনার (comparison) baseline।
         total_repair_orders_previous = max(total_repair_orders - repair_orders_this_month, 0)
-
-        pending_orders = self._pending_count(maintenance_model) + self._pending_count(repair_model)
-        overdue_orders = self._overdue_count(maintenance_model, today) + self._overdue_count(repair_model, today)
         maintenance_cost = self._maintenance_cost(repair_model, start_date, end_date)
         previous_cost = self._maintenance_cost(repair_model, previous_start, previous_end)
         recent_maintenance = self._recent_maintenance(maintenance_model, start_date, end_date)
@@ -59,23 +52,48 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         recent_repairs = self._recent_repairs(repair_model, start_date, end_date)
         recent_repairs_domain = self._ids_domain([row["id"] for row in recent_repairs])
 
+        # KIO CUSTOM: Today's Maintenance Requests
+        today_maintenance_requests = self._count(
+            maintenance_model,
+            self._date_domain(maintenance_model, today, today)
+        )
+
+        # KIO CUSTOM: Today's Repair Orders
+        today_repair_orders = self._count(
+            repair_model,
+            self._date_domain(repair_model, today, today)
+        )
+
         return {
             "period": {"label": "%s - %s" % (start_date.strftime("%b %d, %Y"), end_date.strftime("%b %d, %Y"))},
             "kpis": [
-                self._kpi("total_requests", "Total Requests", total_requests, previous_requests, "35 In Progress",
-                          "clipboard", "primary"),
+                self._kpi(
+                    "today_maintenance_requests",
+                    "Today's Maintenance Requests",
+                    today_maintenance_requests,
+                    0,
+                    "Today",
+                    "maintenance",
+                    "primary",
+                ),
+
                 self._kpi("maintenance_orders", "Maintenance Orders", total_maintenance_orders,
                           total_maintenance_orders_previous,
                           f"{maintenance_orders_this_month} This Month", "maintenance", "success"),
+
+                self._kpi(
+                    "today_repair_orders",
+                    "Today's Repair Orders",
+                    today_repair_orders,
+                    0,
+                    "Today",
+                    "repair",
+                    "info",
+                ),
+
                 # মোট Repair Orders দেখাবে (সবসময়, month filter ছাড়া) + এই মাসে কত আছে তাও info হিসেবে দেখাবে
                 self._kpi("repair_orders", "Repair Orders", total_repair_orders, total_repair_orders_previous,
                           f"{repair_orders_this_month} This Month", "repair", "info"),
-                self._kpi("pending_orders", "Pending Orders", pending_orders, pending_orders + 3, "4 On Hold", "clock",
-                          "warning"),
-                self._kpi("overdue_orders", "Overdue Orders", overdue_orders, overdue_orders + 2,
-                          "%s Overdue" % overdue_orders, "warning", "danger"),
-                self._kpi("maintenance_cost", "Maintenance Cost", maintenance_cost, previous_cost, "This Month",
-                          "money", "teal", money=True),
             ],
             "charts": {
                 "requests_trend": self._requests_trend(maintenance_model, repair_model, start_date, end_date),
