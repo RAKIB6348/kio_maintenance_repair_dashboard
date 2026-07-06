@@ -35,8 +35,16 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             self._base_domain(maintenance_model, previous_start, previous_end)
             + self._maintenance_type_domain(maintenance_model, "preventive"),
         )
-        repair_orders = self._count(repair_model, self._base_domain(repair_model, start_date, end_date))
-        previous_repairs = self._count(repair_model, self._base_domain(repair_model, previous_start, previous_end))
+
+        # Repair Orders এর জন্য পরিবর্তন
+        repair_orders_this_month = self._count(repair_model, self._base_domain(repair_model, start_date, end_date))
+
+        # মোট সব Repair Orders (এটাই সবসময় KPI card এর মূল value, কখনো month দিয়ে filter হবে না)
+        total_repair_orders = self._count(repair_model)
+
+        # এই মাস শুরু হওয়ার আগে পর্যন্ত মোট কত repair order ছিল - এটাই তুলনার (comparison) baseline।
+        total_repair_orders_previous = max(total_repair_orders - repair_orders_this_month, 0)
+
         pending_orders = self._pending_count(maintenance_model) + self._pending_count(repair_model)
         overdue_orders = self._overdue_count(maintenance_model, today) + self._overdue_count(repair_model, today)
         maintenance_cost = self._maintenance_cost(repair_model, start_date, end_date)
@@ -53,8 +61,9 @@ class MaintenanceRepairDashboard(models.AbstractModel):
                           "clipboard", "primary"),
                 self._kpi("maintenance_orders", "Maintenance Orders", maintenance_orders, previous_maintenance_orders,
                           "14 In Progress", "maintenance", "success"),
-                self._kpi("repair_orders", "Repair Orders", repair_orders, previous_repairs, "%s Total" % repair_orders,
-                          "repair", "info"),
+                # মোট Repair Orders দেখাবে (সবসময়, month filter ছাড়া) + এই মাসে কত আছে তাও info হিসেবে দেখাবে
+                self._kpi("repair_orders", "Repair Orders", total_repair_orders, total_repair_orders_previous,
+                          f"{repair_orders_this_month} This Month", "repair", "info"),
                 self._kpi("pending_orders", "Pending Orders", pending_orders, pending_orders + 3, "4 On Hold", "clock",
                           "warning"),
                 self._kpi("overdue_orders", "Overdue Orders", overdue_orders, overdue_orders + 2,
@@ -90,15 +99,20 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         }
 
     def _model(self, model_name):
+        # NOTE: এটা explicit ভাবে False অথবা একটা recordset রিটার্ন করে।
+        # কখনো `if model:` দিয়ে চেক করা উচিত না, কারণ Odoo recordset-এর
+        # truthiness নির্ভর করে তার ভেতরে কয়টা record bound আছে তার উপর -
+        # model valid কিনা সেটার উপর না। সবসময় `model is False` / `model is not False`
+        # দিয়ে চেক করতে হবে।
         return self.env[model_name].sudo() if model_name in self.env.registry else False
 
     def _field(self, model, names):
-        if not model:
+        if model is False:
             return False
         return next((name for name in names if name in model._fields), False)
 
     def _count(self, model, domain=None):
-        return model.search_count(domain or []) if model else 0
+        return model.search_count(domain or []) if model is not False else 0
 
     def _date_domain(self, model, start_date, end_date):
         field = self._field(model, ["request_date", "schedule_date", "create_date", "date"])
@@ -117,7 +131,7 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         return [("maintenance_type", "=", maintenance_type)] if self._field(model, ["maintenance_type"]) else []
 
     def _pending_count(self, model):
-        if not model:
+        if model is False:
             return 0
         if self._field(model, ["stage_id"]):
             return model.search_count([("stage_id.fold", "=", False)])
@@ -127,7 +141,7 @@ class MaintenanceRepairDashboard(models.AbstractModel):
 
     def _overdue_count(self, model, today):
         date_field = self._field(model, ["schedule_date", "request_date", "date_deadline"])
-        if not model or not date_field:
+        if model is False or not date_field:
             return 0
         domain = [(date_field, "<", today)]
         if self._field(model, ["stage_id"]):
@@ -137,7 +151,7 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         return model.search_count(domain)
 
     def _maintenance_cost(self, repair_model, start_date, end_date):
-        if not repair_model:
+        if repair_model is False:
             return 0.0
         amount_field = self._field(repair_model, ["amount_total", "invoice_amount", "price_total"])
         if not amount_field:
@@ -181,7 +195,7 @@ class MaintenanceRepairDashboard(models.AbstractModel):
     def _category_chart(self, model, start_date, end_date):
         labels = ["Mechanical", "Electrical", "Civil", "HVAC", "Other"]
         counts = Counter()
-        if model:
+        if model is not False:
             records = model.search(self._date_domain(model, start_date, end_date))
             category_field = self._field(model, ["maintenance_type", "category_id"])
             for record in records:
@@ -209,7 +223,7 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             "cancel": "Cancelled",
         }
 
-        if not repair_model or "state" not in repair_model._fields:
+        if repair_model is False or "state" not in repair_model._fields:
             return {"labels": labels, "data": [2, 0, 0, 1, 0]}  # fallback
 
         # Get all repair orders (or filtered by date if you want)
@@ -244,7 +258,7 @@ class MaintenanceRepairDashboard(models.AbstractModel):
     def _recent_maintenance(self, model, start_date, end_date):
         order_field = self._field(model, ["request_date", "create_date"])
         order = "%s desc" % order_field if order_field else "id desc"
-        records = model.search(self._base_domain(model, start_date, end_date), limit=5, order=order) if model else []
+        records = model.search(self._base_domain(model, start_date, end_date), limit=5, order=order) if model is not False else []
         rows = []
         for record in records:
             rows.append({
@@ -260,7 +274,7 @@ class MaintenanceRepairDashboard(models.AbstractModel):
     def _recent_repairs(self, model, start_date, end_date):
         order_field = self._field(model, ["schedule_date", "create_date"])
         order = "%s desc" % order_field if order_field else "id desc"
-        records = model.search(self._base_domain(model, start_date, end_date), limit=5, order=order) if model else []
+        records = model.search(self._base_domain(model, start_date, end_date), limit=5, order=order) if model is not False else []
         rows = []
         for record in records:
             rows.append({
@@ -285,7 +299,7 @@ class MaintenanceRepairDashboard(models.AbstractModel):
 
     def _equipment_downtime(self, model):
         rows = []
-        if model and self._field(model, ["equipment_id"]):
+        if model is not False and self._field(model, ["equipment_id"]):
             groups = model.read_group([("equipment_id", "!=", False)], ["equipment_id"], ["equipment_id"], limit=5)
             for index, group in enumerate(groups):
                 hours = round((group["equipment_id_count"] * 2.8) + (5 - index), 1)
@@ -328,10 +342,10 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         equipment_total = self._count(equipment_model)
         return [
             {"title": "Total Technicians", "value": self._count(employee_model, [("employee_type", "=",
-                                                                                  "employee")]) if employee_model and "employee_type" in employee_model._fields else self._count(
+                                                                                  "employee")]) if employee_model is not False and "employee_type" in employee_model._fields else self._count(
                 employee_model), "icon": "users", "color": "neutral"},
             {"title": "Active Vendors",
-             "value": self._count(partner_model, [("supplier_rank", ">", 0)]) if partner_model else 0, "icon": "vendor",
+             "value": self._count(partner_model, [("supplier_rank", ">", 0)]) if partner_model is not False else 0, "icon": "vendor",
              "color": "neutral"},
             {"title": "Total Equipment", "value": equipment_total, "icon": "equipment", "color": "neutral"},
             {"title": "Critical Equipment", "value": max(0, round(equipment_total * 0.11)), "icon": "warning",
