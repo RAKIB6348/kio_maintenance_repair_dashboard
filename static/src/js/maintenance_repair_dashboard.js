@@ -106,23 +106,62 @@ export class MaintenanceRepairDashboard extends Component {
                 view_mode: "tree,form",
                 views: [[false, "tree"], [false, "form"]],
             },
+            // নতুন State based actions
+            repair_new: {
+                name: "New Repair Orders",
+                res_model: "repair.order",
+                domain: [["state", "=", "draft"]],
+                view_mode: "tree,form",
+                views: [[false, "tree"], [false, "form"]],
+            },
+            repair_confirmed: {
+                name: "Confirmed Repair Orders",
+                res_model: "repair.order",
+                domain: [["state", "=", "confirmed"]],
+                view_mode: "tree,form",
+                views: [[false, "tree"], [false, "form"]],
+            },
+            repair_under: {
+                name: "Under Repair Orders",
+                res_model: "repair.order",
+                domain: [["state", "=", "under_repair"]],
+                view_mode: "tree,form",
+                views: [[false, "tree"], [false, "form"]],
+            },
+            repair_repaired: {
+                name: "Repaired Orders",
+                res_model: "repair.order",
+                domain: [["state", "=", "done"]],
+                view_mode: "tree,form",
+                views: [[false, "tree"], [false, "form"]],
+            },
+            repair_cancelled: {
+                name: "Cancelled Repair Orders",
+                res_model: "repair.order",
+                domain: [["state", "=", "cancel"]],
+                view_mode: "tree,form",
+                views: [[false, "tree"], [false, "form"]],
+            },
         };
+
         const action = actions[kpi.key];
         if (!action) {
-            this.notification.add(`${kpi.title} drill-down is ready to configure.`, {type: "info"});
+            this.notification.add(`${kpi.title} drill-down is ready to configure.`, { type: "info" });
             return;
         }
+
         try {
             await this.action.doAction({
                 type: "ir.actions.act_window",
                 name: action.name,
                 res_model: action.res_model,
+                domain: action.domain || [],
                 view_mode: action.view_mode,
                 views: action.views,
                 target: "current",
             });
         } catch {
-            this.notification.add(`Unable to open ${action.name}.`, {type: "danger"});
+            this.notification.add(`Unable to open ${action.name}.`, { type: "danger" });
         }
     }
 
