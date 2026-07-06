@@ -70,15 +70,19 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         return {
             "period": {"label": "%s - %s" % (start_date.strftime("%b %d, %Y"), end_date.strftime("%b %d, %Y"))},
             "kpis": [
-                self._kpi("today_maintenance_requests", "Today's Maintenance", today_maintenance_requests, 0, "Today", "maintenance", "primary"),
                 self._kpi("maintenance_orders", "Maintenance Orders", total_maintenance_orders, total_maintenance_orders_previous, f"{maintenance_orders_this_month} This Month", "maintenance", "success"),
+                self._kpi("repair_orders", "Repair Orders", total_repair_orders, total_repair_orders_previous,
+                          f"{repair_orders_this_month} This Month", "repair", "info"),
 
                 # নতুন যোগ করা হলো
-                self._kpi("repair_new", "New Repair", repair_states['new'], 0, "New", "repair", "warning"),
-                self._kpi("repair_under", "Under Repair", repair_states['under_repair'], 0, "In Progress", "repair", "danger"),
-                self._kpi("repair_repaired", "Repaired", repair_states['repaired'], 0, "Done", "repair", "success"),
-
-                self._kpi("repair_orders", "Repair Orders", total_repair_orders, total_repair_orders_previous, f"{repair_orders_this_month} This Month", "repair", "info"),
+                self._kpi("repair_new", "New Repair", repair_states["new"], 0, "New", "repair", "warning"),
+                self._kpi("repair_confirmed", "Confirmed Repair", repair_states["confirmed"], 0, "Confirmed", "repair",
+                          "primary"),
+                self._kpi("repair_under", "Under Repair", repair_states["under_repair"], 0, "In Progress", "repair",
+                          "danger"),
+                self._kpi("repair_repaired", "Repaired", repair_states["repaired"], 0, "Done", "repair", "success"),
+                self._kpi("repair_cancelled", "Cancelled Repair", repair_states["cancelled"], 0, "Cancelled", "repair",
+                          "danger"),
             ],
             "charts": {
                 "requests_trend": self._requests_trend(maintenance_model, repair_model, start_date, end_date),
@@ -393,22 +397,31 @@ class MaintenanceRepairDashboard(models.AbstractModel):
              "date": "2025-05-26", "status": "Cancelled"},
         ]
 
-
+    # KIO CUSTOM: Count repair.order records by actual repair state values.
     def _get_repair_states_count(self, repair_model):
+        counts = {
+            "new": 0,
+            "confirmed": 0,
+            "under_repair": 0,
+            "repaired": 0,
+            "cancelled": 0,
+        }
+
         if repair_model is False:
-            return {'new': 2, 'under_repair': 1, 'repaired': 3, 'cancelled': 0}
+            return counts
 
         records = repair_model.search([])
-        counts = {'new': 0, 'under_repair': 0, 'repaired': 0, 'cancelled': 0}
 
-        for r in records:
-            if r.state == 'draft':
-                counts['new'] += 1
-            elif r.state == 'under_repair':
-                counts['under_repair'] += 1
-            elif r.state == 'done':
-                counts['repaired'] += 1
-            elif r.state == 'cancel':
-                counts['cancelled'] += 1
+        for record in records:
+            if record.state == "draft":
+                counts["new"] += 1
+            elif record.state == "confirmed":
+                counts["confirmed"] += 1
+            elif record.state == "under_repair":
+                counts["under_repair"] += 1
+            elif record.state == "done":
+                counts["repaired"] += 1
+            elif record.state == "cancel":
+                counts["cancelled"] += 1
 
         return counts
