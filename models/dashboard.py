@@ -25,16 +25,21 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         total_requests = self._count(maintenance_model, self._date_domain(maintenance_model, start_date, end_date))
         previous_requests = self._count(maintenance_model,
                                         self._date_domain(maintenance_model, previous_start, previous_end))
-        maintenance_orders = self._count(
+
+        # এই মাসে মোট কত Maintenance Order আছে (type নির্বিশেষে - preventive/corrective সব মিলিয়ে)
+        maintenance_orders_this_month = self._count(
             maintenance_model,
-            self._base_domain(maintenance_model, start_date, end_date)
-            + self._maintenance_type_domain(maintenance_model, "preventive"),
+            self._base_domain(maintenance_model, start_date, end_date),
         )
-        previous_maintenance_orders = self._count(
+
+        # মোট সব Maintenance Orders (type নির্বিশেষে, সবসময়, কখনো month filter হবে না)
+        total_maintenance_orders = self._count(
             maintenance_model,
-            self._base_domain(maintenance_model, previous_start, previous_end)
-            + self._maintenance_type_domain(maintenance_model, "preventive"),
+            self._company_domain(maintenance_model),
         )
+
+        # এই মাস শুরু হওয়ার আগে পর্যন্ত মোট কত ছিল - comparison baseline
+        total_maintenance_orders_previous = max(total_maintenance_orders - maintenance_orders_this_month, 0)
 
         # Repair Orders এর জন্য পরিবর্তন
         repair_orders_this_month = self._count(repair_model, self._base_domain(repair_model, start_date, end_date))
@@ -59,8 +64,9 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             "kpis": [
                 self._kpi("total_requests", "Total Requests", total_requests, previous_requests, "35 In Progress",
                           "clipboard", "primary"),
-                self._kpi("maintenance_orders", "Maintenance Orders", maintenance_orders, previous_maintenance_orders,
-                          "14 In Progress", "maintenance", "success"),
+                self._kpi("maintenance_orders", "Maintenance Orders", total_maintenance_orders,
+                          total_maintenance_orders_previous,
+                          f"{maintenance_orders_this_month} This Month", "maintenance", "success"),
                 # মোট Repair Orders দেখাবে (সবসময়, month filter ছাড়া) + এই মাসে কত আছে তাও info হিসেবে দেখাবে
                 self._kpi("repair_orders", "Repair Orders", total_repair_orders, total_repair_orders_previous,
                           f"{repair_orders_this_month} This Month", "repair", "info"),
