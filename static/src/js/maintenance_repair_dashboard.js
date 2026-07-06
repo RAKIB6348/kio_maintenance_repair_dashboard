@@ -224,7 +224,11 @@ export class MaintenanceRepairDashboard extends Component {
         }));
 
         this.charts.push(new Chart(this.categoryChart.el, this.doughnutConfig(data.charts.category, [COLORS.primary, "#0875E1", COLORS.success, "#F97316", "#94A3B8"])));
-        this.charts.push(new Chart(this.statusChart.el, this.doughnutConfig(data.charts.status, ["#0875E1", "#F97316", "#FBBF24", "#94A3B8"])));
+        this.charts.push(new Chart(this.statusChart.el, this.doughnutConfig(
+            data.charts.status,
+            ["#0875E1", "#F97316", "#FBBF24", "#94A3B8"],
+            [this.doughnutCenterTextPlugin("Total Orders")]
+        )));
         this.charts.push(new Chart(this.downtimeChart.el, this.miniLineConfig(data.charts.downtime, COLORS.primary, true)));
         this.charts.push(new Chart(this.mttrChart.el, this.miniLineConfig(data.charts.mttr, "#0875E1", false)));
         this.charts.push(new Chart(this.mtbfChart.el, this.miniLineConfig(data.charts.mtbf, COLORS.success, false)));
@@ -263,7 +267,7 @@ export class MaintenanceRepairDashboard extends Component {
         };
     }
 
-    doughnutConfig(source, colors) {
+    doughnutConfig(source, colors, plugins = []) {
         return {
             type: "doughnut",
             data: { labels: source.labels, datasets: [{ data: source.data, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }] },
@@ -273,6 +277,36 @@ export class MaintenanceRepairDashboard extends Component {
                 cutout: "58%",
                 animation: { animateRotate: true, duration: 900 },
                 plugins: { legend: { position: "right", labels: { usePointStyle: true, boxWidth: 8, color: "#0F172A", padding: 18 } } },
+            },
+            plugins,
+        };
+    }
+
+    doughnutCenterTextPlugin(title) {
+        return {
+            id: `kioDoughnutCenterText${title.replace(/\s+/g, "")}`,
+            afterDraw(chart) {
+                const dataset = chart.data.datasets[0]?.data || [];
+                const total = dataset.reduce((sum, value) => sum + Number(value || 0), 0);
+                const { ctx, chartArea } = chart;
+
+                if (!chartArea) {
+                    return;
+                }
+
+                const centerX = (chartArea.left + chartArea.right) / 2;
+                const centerY = (chartArea.top + chartArea.bottom) / 2;
+
+                ctx.save();
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "#64748B";
+                ctx.font = "700 12px Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+                ctx.fillText(title, centerX, centerY - 10);
+                ctx.fillStyle = "#0F172A";
+                ctx.font = "850 24px Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+                ctx.fillText(String(total), centerX, centerY + 16);
+                ctx.restore();
             },
         };
     }
