@@ -26,7 +26,12 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         previous_requests = self._count(maintenance_model, self._date_domain(maintenance_model, previous_start, previous_end))
         maintenance_orders = self._count(
             maintenance_model,
-            self._date_domain(maintenance_model, start_date, end_date)
+            self._base_domain(maintenance_model, start_date, end_date)
+            + self._maintenance_type_domain(maintenance_model, "preventive"),
+        )
+        previous_maintenance_orders = self._count(
+            maintenance_model,
+            self._base_domain(maintenance_model, previous_start, previous_end)
             + self._maintenance_type_domain(maintenance_model, "preventive"),
         )
         repair_orders = self._count(repair_model, self._base_domain(repair_model, start_date, end_date))
@@ -40,7 +45,7 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             "period": {"label": "%s - %s" % (start_date.strftime("%b %d, %Y"), end_date.strftime("%b %d, %Y"))},
             "kpis": [
                 self._kpi("total_requests", "Total Requests", total_requests, previous_requests, "35 In Progress", "clipboard", "primary"),
-                self._kpi("maintenance_orders", "Maintenance Orders", maintenance_orders, previous_requests, "14 In Progress", "maintenance", "success"),
+                self._kpi("maintenance_orders", "Maintenance Orders", maintenance_orders, previous_maintenance_orders, "14 In Progress", "maintenance", "success"),
                 self._kpi("repair_orders", "Repair Orders", repair_orders, previous_repairs, "%s Total" % repair_orders, "repair", "info"),
                 self._kpi("pending_orders", "Pending Orders", pending_orders, pending_orders + 3, "4 On Hold", "clock", "warning"),
                 self._kpi("overdue_orders", "Overdue Orders", overdue_orders, overdue_orders + 2, "%s Overdue" % overdue_orders, "warning", "danger"),

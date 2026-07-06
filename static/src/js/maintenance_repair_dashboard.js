@@ -88,21 +88,36 @@ export class MaintenanceRepairDashboard extends Component {
     }
 
     async openKpi(kpi) {
-        if (kpi.key !== "repair_orders") {
+        const actions = {
+            maintenance_orders: {
+                name: "Maintenance Orders",
+                res_model: "maintenance.request",
+                view_mode: "kanban,tree,form",
+                views: [[false, "kanban"], [false, "tree"], [false, "form"]],
+            },
+            repair_orders: {
+                name: "Repair Orders",
+                res_model: "repair.order",
+                view_mode: "tree,form",
+                views: [[false, "tree"], [false, "form"]],
+            },
+        };
+        const action = actions[kpi.key];
+        if (!action) {
             this.notification.add(`${kpi.title} drill-down is ready to configure.`, { type: "info" });
             return;
         }
         try {
             await this.action.doAction({
                 type: "ir.actions.act_window",
-                name: "Repair Orders",
-                res_model: "repair.order",
-                view_mode: "tree,form",
-                views: [[false, "tree"], [false, "form"]],
+                name: action.name,
+                res_model: action.res_model,
+                view_mode: action.view_mode,
+                views: action.views,
                 target: "current",
             });
         } catch {
-            this.notification.add("Unable to open Repair Orders.", { type: "danger" });
+            this.notification.add(`Unable to open ${action.name}.`, { type: "danger" });
         }
     }
 
