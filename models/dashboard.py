@@ -23,7 +23,8 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         equipment_model = self._model("maintenance.equipment")
 
         total_requests = self._count(maintenance_model, self._date_domain(maintenance_model, start_date, end_date))
-        previous_requests = self._count(maintenance_model, self._date_domain(maintenance_model, previous_start, previous_end))
+        previous_requests = self._count(maintenance_model,
+                                        self._date_domain(maintenance_model, previous_start, previous_end))
         maintenance_orders = self._count(
             maintenance_model,
             self._base_domain(maintenance_model, start_date, end_date)
@@ -48,12 +49,18 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         return {
             "period": {"label": "%s - %s" % (start_date.strftime("%b %d, %Y"), end_date.strftime("%b %d, %Y"))},
             "kpis": [
-                self._kpi("total_requests", "Total Requests", total_requests, previous_requests, "35 In Progress", "clipboard", "primary"),
-                self._kpi("maintenance_orders", "Maintenance Orders", maintenance_orders, previous_maintenance_orders, "14 In Progress", "maintenance", "success"),
-                self._kpi("repair_orders", "Repair Orders", repair_orders, previous_repairs, "%s Total" % repair_orders, "repair", "info"),
-                self._kpi("pending_orders", "Pending Orders", pending_orders, pending_orders + 3, "4 On Hold", "clock", "warning"),
-                self._kpi("overdue_orders", "Overdue Orders", overdue_orders, overdue_orders + 2, "%s Overdue" % overdue_orders, "warning", "danger"),
-                self._kpi("maintenance_cost", "Maintenance Cost", maintenance_cost, previous_cost, "This Month", "money", "teal", money=True),
+                self._kpi("total_requests", "Total Requests", total_requests, previous_requests, "35 In Progress",
+                          "clipboard", "primary"),
+                self._kpi("maintenance_orders", "Maintenance Orders", maintenance_orders, previous_maintenance_orders,
+                          "14 In Progress", "maintenance", "success"),
+                self._kpi("repair_orders", "Repair Orders", repair_orders, previous_repairs, "%s Total" % repair_orders,
+                          "repair", "info"),
+                self._kpi("pending_orders", "Pending Orders", pending_orders, pending_orders + 3, "4 On Hold", "clock",
+                          "warning"),
+                self._kpi("overdue_orders", "Overdue Orders", overdue_orders, overdue_orders + 2,
+                          "%s Overdue" % overdue_orders, "warning", "danger"),
+                self._kpi("maintenance_cost", "Maintenance Cost", maintenance_cost, previous_cost, "This Month",
+                          "money", "teal", money=True),
             ],
             "charts": {
                 "requests_trend": self._requests_trend(maintenance_model, repair_model, start_date, end_date),
@@ -70,10 +77,14 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             "recent_repairs_domain": recent_repairs_domain,
             "equipment_downtime": self._equipment_downtime(maintenance_model),
             "analytics": {
-                "downtime": {"title": "Downtime Analysis", "value": "53.4 hrs", "change": -9, "icon": "clock", "color": "primary"},
-                "mttr": {"title": "MTTR (Mean Time To Repair)", "value": "4.25 hrs", "change": 6, "icon": "repair", "color": "info"},
-                "mtbf": {"title": "MTBF (Mean Time Between Failure)", "value": "128.6 hrs", "change": 11, "icon": "analytics", "color": "success"},
-                "cost": {"title": "Maintenance Cost Trend", "value": self._money(maintenance_cost), "change": self._change(maintenance_cost, previous_cost), "icon": "money", "color": "warning"},
+                "downtime": {"title": "Downtime Analysis", "value": "53.4 hrs", "change": -9, "icon": "clock",
+                             "color": "primary"},
+                "mttr": {"title": "MTTR (Mean Time To Repair)", "value": "4.25 hrs", "change": 6, "icon": "repair",
+                         "color": "info"},
+                "mtbf": {"title": "MTBF (Mean Time Between Failure)", "value": "128.6 hrs", "change": 11,
+                         "icon": "analytics", "color": "success"},
+                "cost": {"title": "Maintenance Cost Trend", "value": self._money(maintenance_cost),
+                         "change": self._change(maintenance_cost, previous_cost), "icon": "money", "color": "warning"},
             },
             "bottom_kpis": self._bottom_kpis(equipment_model),
         }
@@ -183,27 +194,49 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             data = [16, 10, 8, 5, 3]
         return {"labels": labels, "data": data}
 
-    def _status_chart(self, repair_model, maintenance_model, start_date, end_date):
-        labels = ["In Progress", "Pending", "On Hold", "Cancelled"]
-        records = repair_model.search(self._date_domain(repair_model, start_date, end_date)) if repair_model else False
-        if not records and maintenance_model:
-            records = maintenance_model.search(self._date_domain(maintenance_model, start_date, end_date))
-        data = [0, 0, 0, 0]
-        for record in records or []:
-            state = record.state if "state" in record._fields else ""
-            stage = record.stage_id.name.lower() if "stage_id" in record._fields and record.stage_id else ""
-            text = "%s %s" % (state, stage)
-            if "cancel" in text:
-                data[3] += 1
-            elif "hold" in text or "block" in text:
-                data[2] += 1
-            elif "draft" in text or "pending" in text:
-                data[1] += 1
-            else:
-                data[0] += 1
-        if not any(data):
-            data = [14, 7, 3, 2]
-        return {"labels": labels, "data": data}
+
+    def _status_chart(self, repair_model, maintenance_model=False, start_date=False, end_date=False):
+        """Fixed Status Chart for Repair Orders"""
+
+        labels = ["New", "Confirmed", "Under Repair", "Repaired", "Cancelled"]
+
+        # State mapping
+        state_to_label = {
+            "draft": "New",
+            "confirmed": "Confirmed",
+            "under_repair": "Under Repair",
+            "done": "Repaired",
+            "cancel": "Cancelled",
+        }
+
+        if not repair_model or "state" not in repair_model._fields:
+            return {"labels": labels, "data": [2, 0, 0, 1, 0]}  # fallback
+
+        # Get all repair orders (or filtered by date if you want)
+        domain = self._base_domain(repair_model, start_date, end_date) if start_date and end_date else []
+
+        records = repair_model.search(domain)
+
+        counts = {label: 0 for label in labels}
+
+        for record in records:
+            state = record.state
+            label = state_to_label.get(state, "New")  # default to New if unknown
+            if label in counts:
+                counts[label] += 1
+
+        data = [counts[label] for label in labels]
+
+        # Debug: Server log-এ দেখতে চাইলে
+        print("=== Status Chart Debug ===")
+        print(f"Total Records: {len(records)}")
+        print(f"Counts: {counts}")
+        print("=========================")
+
+        return {
+            "labels": labels,
+            "data": data,
+        }
 
     def _ids_domain(self, record_ids):
         return [["id", "in", record_ids]] if record_ids else [["id", "=", False]]
@@ -236,7 +269,8 @@ class MaintenanceRepairDashboard(models.AbstractModel):
                 "equipment": record.product_id.display_name if "product_id" in record._fields and record.product_id else "Equipment",
                 "priority": self._priority(record),
                 "date": self._format_date(record, ["schedule_date", "create_date"]),
-                "status": dict(record._fields["state"].selection).get(record.state, record.state) if "state" in record._fields else "In Progress",
+                "status": dict(record._fields["state"].selection).get(record.state,
+                                                                      record.state) if "state" in record._fields else "In Progress",
             })
         return rows
 
@@ -279,7 +313,9 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             data.append(self._maintenance_cost(repair_model, current, current))
             current += timedelta(days=1)
         if not any(data):
-            data = [21000, 14000, 19000, 16000, 29000, 17000, 13000, 15000, 22000, 28000, 24000, 19000, 17000, 16000, 31000, 18000, 13000, 17000, 20000, 16000, 19000, 24000, 22000, 19000, 15000, 14000, 16000, 12000, 13000, 25000, 18000][: len(labels)]
+            data = [21000, 14000, 19000, 16000, 29000, 17000, 13000, 15000, 22000, 28000, 24000, 19000, 17000, 16000,
+                    31000, 18000, 13000, 17000, 20000, 16000, 19000, 24000, 22000, 19000, 15000, 14000, 16000, 12000,
+                    13000, 25000, 18000][: len(labels)]
         return {"labels": labels, "data": data}
 
     def _mini_series(self, length, low, high):
@@ -291,28 +327,45 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         partner_model = self._model("res.partner")
         equipment_total = self._count(equipment_model)
         return [
-            {"title": "Total Technicians", "value": self._count(employee_model, [("employee_type", "=", "employee")]) if employee_model and "employee_type" in employee_model._fields else self._count(employee_model), "icon": "users", "color": "neutral"},
-            {"title": "Active Vendors", "value": self._count(partner_model, [("supplier_rank", ">", 0)]) if partner_model else 0, "icon": "vendor", "color": "neutral"},
+            {"title": "Total Technicians", "value": self._count(employee_model, [("employee_type", "=",
+                                                                                  "employee")]) if employee_model and "employee_type" in employee_model._fields else self._count(
+                employee_model), "icon": "users", "color": "neutral"},
+            {"title": "Active Vendors",
+             "value": self._count(partner_model, [("supplier_rank", ">", 0)]) if partner_model else 0, "icon": "vendor",
+             "color": "neutral"},
             {"title": "Total Equipment", "value": equipment_total, "icon": "equipment", "color": "neutral"},
-            {"title": "Critical Equipment", "value": max(0, round(equipment_total * 0.11)), "icon": "warning", "color": "danger"},
-            {"title": "Warranty Expiring", "value": max(0, round(equipment_total * 0.05)), "icon": "shield", "color": "warning"},
-            {"title": "PM Due This Week", "value": max(0, round(equipment_total * 0.07)), "icon": "calendar", "color": "primary"},
+            {"title": "Critical Equipment", "value": max(0, round(equipment_total * 0.11)), "icon": "warning",
+             "color": "danger"},
+            {"title": "Warranty Expiring", "value": max(0, round(equipment_total * 0.05)), "icon": "shield",
+             "color": "warning"},
+            {"title": "PM Due This Week", "value": max(0, round(equipment_total * 0.07)), "icon": "calendar",
+             "color": "primary"},
         ]
 
     def _sample_maintenance(self):
         return [
-            {"id": 1, "request_no": "MR/2025/0042", "equipment": "CNC Machine - 01", "priority": "Urgent", "date": "2025-05-30", "status": "In Progress"},
-            {"id": 2, "request_no": "MR/2025/0041", "equipment": "Air Compressor - 02", "priority": "High", "date": "2025-05-29", "status": "In Progress"},
-            {"id": 3, "request_no": "MR/2025/0040", "equipment": "Packaging Machine - 03", "priority": "Medium", "date": "2025-05-28", "status": "New"},
-            {"id": 4, "request_no": "MR/2025/0039", "equipment": "Generator - 01", "priority": "High", "date": "2025-05-27", "status": "Done"},
-            {"id": 5, "request_no": "MR/2025/0038", "equipment": "Conveyor Belt - 01", "priority": "Low", "date": "2025-05-26", "status": "In Progress"},
+            {"id": 1, "request_no": "MR/2025/0042", "equipment": "CNC Machine - 01", "priority": "Urgent",
+             "date": "2025-05-30", "status": "In Progress"},
+            {"id": 2, "request_no": "MR/2025/0041", "equipment": "Air Compressor - 02", "priority": "High",
+             "date": "2025-05-29", "status": "In Progress"},
+            {"id": 3, "request_no": "MR/2025/0040", "equipment": "Packaging Machine - 03", "priority": "Medium",
+             "date": "2025-05-28", "status": "New"},
+            {"id": 4, "request_no": "MR/2025/0039", "equipment": "Generator - 01", "priority": "High",
+             "date": "2025-05-27", "status": "Done"},
+            {"id": 5, "request_no": "MR/2025/0038", "equipment": "Conveyor Belt - 01", "priority": "Low",
+             "date": "2025-05-26", "status": "In Progress"},
         ]
 
     def _sample_repairs(self):
         return [
-            {"id": 1, "repair_order": "RO/2025/0023", "equipment": "CNC Machine - 01", "priority": "Urgent", "date": "2025-05-30", "status": "In Progress"},
-            {"id": 2, "repair_order": "RO/2025/0022", "equipment": "Air Compressor - 02", "priority": "High", "date": "2025-05-29", "status": "In Progress"},
-            {"id": 3, "repair_order": "RO/2025/0021", "equipment": "Generator - 01", "priority": "Medium", "date": "2025-05-28", "status": "Repaired"},
-            {"id": 4, "repair_order": "RO/2025/0020", "equipment": "Conveyor Belt - 02", "priority": "Low", "date": "2025-05-27", "status": "Repaired"},
-            {"id": 5, "repair_order": "RO/2025/0019", "equipment": "Packaging Machine - 03", "priority": "High", "date": "2025-05-26", "status": "Cancelled"},
+            {"id": 1, "repair_order": "RO/2025/0023", "equipment": "CNC Machine - 01", "priority": "Urgent",
+             "date": "2025-05-30", "status": "In Progress"},
+            {"id": 2, "repair_order": "RO/2025/0022", "equipment": "Air Compressor - 02", "priority": "High",
+             "date": "2025-05-29", "status": "In Progress"},
+            {"id": 3, "repair_order": "RO/2025/0021", "equipment": "Generator - 01", "priority": "Medium",
+             "date": "2025-05-28", "status": "Repaired"},
+            {"id": 4, "repair_order": "RO/2025/0020", "equipment": "Conveyor Belt - 02", "priority": "Low",
+             "date": "2025-05-27", "status": "Repaired"},
+            {"id": 5, "repair_order": "RO/2025/0019", "equipment": "Packaging Machine - 03", "priority": "High",
+             "date": "2025-05-26", "status": "Cancelled"},
         ]
