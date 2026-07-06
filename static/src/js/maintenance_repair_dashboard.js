@@ -141,22 +141,39 @@ export class MaintenanceRepairDashboard extends Component {
     }
 
     async openSection(name) {
-        if (name !== "Maintenance Requests") {
+        const sections = {
+            "Maintenance Requests": {
+                title: "Recent Maintenance Requests",
+                res_model: "maintenance.request",
+                domain: this.state.data.recent_maintenance_domain || [],
+                view_mode: "kanban,tree,form",
+                views: [[false, "kanban"], [false, "tree"], [false, "form"]],
+            },
+            "Repair Orders": {
+                title: "Recent Repair Orders",
+                res_model: "repair.order",
+                domain: this.state.data.recent_repairs_domain || [],
+                view_mode: "tree,form",
+                views: [[false, "tree"], [false, "form"]],
+            },
+        };
+        const section = sections[name];
+        if (!section) {
             this.notification.add(`${name} drill-down is ready to configure.`, { type: "info" });
             return;
         }
         try {
             await this.action.doAction({
                 type: "ir.actions.act_window",
-                name: "Recent Maintenance Requests",
-                res_model: "maintenance.request",
-                domain: this.state.data.recent_maintenance_domain || [],
-                view_mode: "kanban,tree,form",
-                views: [[false, "kanban"], [false, "tree"], [false, "form"]],
+                name: section.title,
+                res_model: section.res_model,
+                domain: section.domain,
+                view_mode: section.view_mode,
+                views: section.views,
                 target: "current",
             });
         } catch {
-            this.notification.add("Unable to open Maintenance Requests.", { type: "danger" });
+            this.notification.add(`Unable to open ${section.title}.`, { type: "danger" });
         }
     }
 

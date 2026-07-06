@@ -42,6 +42,8 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         previous_cost = self._maintenance_cost(repair_model, previous_start, previous_end)
         recent_maintenance = self._recent_maintenance(maintenance_model, start_date, end_date)
         recent_maintenance_domain = self._ids_domain([row["id"] for row in recent_maintenance])
+        recent_repairs = self._recent_repairs(repair_model, start_date, end_date)
+        recent_repairs_domain = self._ids_domain([row["id"] for row in recent_repairs])
 
         return {
             "period": {"label": "%s - %s" % (start_date.strftime("%b %d, %Y"), end_date.strftime("%b %d, %Y"))},
@@ -64,7 +66,8 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             },
             "recent_maintenance": recent_maintenance,
             "recent_maintenance_domain": recent_maintenance_domain,
-            "recent_repairs": self._recent_repairs(repair_model),
+            "recent_repairs": recent_repairs,
+            "recent_repairs_domain": recent_repairs_domain,
             "equipment_downtime": self._equipment_downtime(maintenance_model),
             "analytics": {
                 "downtime": {"title": "Downtime Analysis", "value": "53.4 hrs", "change": -9, "icon": "clock", "color": "primary"},
@@ -221,8 +224,10 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             })
         return rows
 
-    def _recent_repairs(self, model):
-        records = model.search([], limit=5, order="id desc") if model else []
+    def _recent_repairs(self, model, start_date, end_date):
+        order_field = self._field(model, ["schedule_date", "create_date"])
+        order = "%s desc" % order_field if order_field else "id desc"
+        records = model.search(self._base_domain(model, start_date, end_date), limit=5, order=order) if model else []
         rows = []
         for record in records:
             rows.append({
@@ -233,7 +238,7 @@ class MaintenanceRepairDashboard(models.AbstractModel):
                 "date": self._format_date(record, ["schedule_date", "create_date"]),
                 "status": dict(record._fields["state"].selection).get(record.state, record.state) if "state" in record._fields else "In Progress",
             })
-        return rows or self._sample_repairs()
+        return rows
 
     def _priority(self, record):
         if "priority" not in record._fields:
