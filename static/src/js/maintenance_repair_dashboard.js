@@ -1,8 +1,8 @@
 /** @odoo-module **/
 
-import { registry } from "@web/core/registry";
-import { Component, onMounted, onWillStart, onWillUnmount, useRef, useState } from "@odoo/owl";
-import { useService } from "@web/core/utils/hooks";
+import {registry} from "@web/core/registry";
+import {Component, onMounted, onWillStart, onWillUnmount, useRef, useState} from "@odoo/owl";
+import {useService} from "@web/core/utils/hooks";
 
 const COLORS = {
     primary: "#4F46E5",
@@ -16,7 +16,7 @@ const COLORS = {
 
 class KioKpiCard extends Component {
     static template = "kio_maintenance_repair_dashboard.KpiCard";
-    static props = { kpi: Object, onOpen: Function };
+    static props = {kpi: Object, onOpen: Function};
 
     iconClass(icon) {
         return {
@@ -32,7 +32,7 @@ class KioKpiCard extends Component {
 
 class KioBottomKpi extends Component {
     static template = "kio_maintenance_repair_dashboard.BottomKpi";
-    static props = { item: Object };
+    static props = {item: Object};
 
     iconClass(icon) {
         return {
@@ -48,14 +48,14 @@ class KioBottomKpi extends Component {
 
 export class MaintenanceRepairDashboard extends Component {
     static template = "kio_maintenance_repair_dashboard.MaintenanceRepairDashboard";
-    static components = { KioKpiCard, KioBottomKpi };
+    static components = {KioKpiCard, KioBottomKpi};
 
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
         this.notification = useService("notification");
         this.user = useService("user");
-        this.state = useState({ loading: true, data: null, query: "" });
+        this.state = useState({loading: true, data: null, query: ""});
         this.charts = [];
 
         this.openKpi = this.openKpi.bind(this);
@@ -109,7 +109,7 @@ export class MaintenanceRepairDashboard extends Component {
         };
         const action = actions[kpi.key];
         if (!action) {
-            this.notification.add(`${kpi.title} drill-down is ready to configure.`, { type: "info" });
+            this.notification.add(`${kpi.title} drill-down is ready to configure.`, {type: "info"});
             return;
         }
         try {
@@ -122,7 +122,7 @@ export class MaintenanceRepairDashboard extends Component {
                 target: "current",
             });
         } catch {
-            this.notification.add(`Unable to open ${action.name}.`, { type: "danger" });
+            this.notification.add(`Unable to open ${action.name}.`, {type: "danger"});
         }
     }
 
@@ -130,14 +130,26 @@ export class MaintenanceRepairDashboard extends Component {
         if (!row.id) {
             return;
         }
-        this.action.doAction({ type: "ir.actions.act_window", res_model: "maintenance.request", res_id: row.id, views: [[false, "form"]], target: "current" });
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "maintenance.request",
+            res_id: row.id,
+            views: [[false, "form"]],
+            target: "current"
+        });
     }
 
     openRepair(row) {
         if (!row.id) {
             return;
         }
-        this.action.doAction({ type: "ir.actions.act_window", res_model: "repair.order", res_id: row.id, views: [[false, "form"]], target: "current" });
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "repair.order",
+            res_id: row.id,
+            views: [[false, "form"]],
+            target: "current"
+        });
     }
 
     async openSection(name) {
@@ -159,7 +171,7 @@ export class MaintenanceRepairDashboard extends Component {
         };
         const section = sections[name];
         if (!section) {
-            this.notification.add(`${name} drill-down is ready to configure.`, { type: "info" });
+            this.notification.add(`${name} drill-down is ready to configure.`, {type: "info"});
             return;
         }
         try {
@@ -173,7 +185,7 @@ export class MaintenanceRepairDashboard extends Component {
                 target: "current",
             });
         } catch {
-            this.notification.add(`Unable to open ${section.title}.`, { type: "danger" });
+            this.notification.add(`Unable to open ${section.title}.`, {type: "danger"});
         }
     }
 
@@ -209,7 +221,7 @@ export class MaintenanceRepairDashboard extends Component {
         this.destroyCharts();
         const data = this.state.data;
         const grid = "rgba(148, 163, 184, 0.18)";
-        const font = { family: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" };
+        const font = {family: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"};
 
         this.charts.push(new Chart(this.trendChart.el, {
             type: "line",
@@ -223,7 +235,14 @@ export class MaintenanceRepairDashboard extends Component {
             options: this.axisOptions(grid, font),
         }));
 
-        this.charts.push(new Chart(this.categoryChart.el, this.doughnutConfig(data.charts.category, [COLORS.primary, "#0875E1", COLORS.success, "#F97316", "#94A3B8"])));
+        this.charts.push(new Chart(
+            this.categoryChart.el,
+            this.doughnutConfig(
+                data.charts.category,
+                [COLORS.primary, "#0875E1", COLORS.success, "#F97316", "#94A3B8"],
+                [this.doughnutCenterTextPlugin("Total Requests")]
+            )
+        ));
         this.charts.push(new Chart(this.statusChart.el, this.doughnutConfig(
             data.charts.status,
             ["#0875E1", "#F97316", "#FBBF24", "#94A3B8"],
@@ -234,7 +253,15 @@ export class MaintenanceRepairDashboard extends Component {
         this.charts.push(new Chart(this.mtbfChart.el, this.miniLineConfig(data.charts.mtbf, COLORS.success, false)));
         this.charts.push(new Chart(this.costChart.el, {
             type: "bar",
-            data: { labels: data.charts.cost.labels, datasets: [{ data: data.charts.cost.data, backgroundColor: "rgba(124, 58, 237, 0.72)", borderRadius: 5, maxBarThickness: 12 }] },
+            data: {
+                labels: data.charts.cost.labels,
+                datasets: [{
+                    data: data.charts.cost.data,
+                    backgroundColor: "rgba(124, 58, 237, 0.72)",
+                    borderRadius: 5,
+                    maxBarThickness: 12
+                }]
+            },
             options: this.axisOptions(grid, font, false),
         }));
     }
@@ -257,12 +284,18 @@ export class MaintenanceRepairDashboard extends Component {
         return {
             responsive: true,
             maintainAspectRatio: false,
-            animation: { duration: 850, easing: "easeOutQuart" },
-            interaction: { intersect: false, mode: "index" },
-            plugins: { legend: { display: legend, position: "top", labels: { usePointStyle: true, boxWidth: 8, color: "#0F172A", font } } },
+            animation: {duration: 850, easing: "easeOutQuart"},
+            interaction: {intersect: false, mode: "index"},
+            plugins: {
+                legend: {
+                    display: legend,
+                    position: "top",
+                    labels: {usePointStyle: true, boxWidth: 8, color: "#0F172A", font}
+                }
+            },
             scales: {
-                x: { grid: { display: false }, ticks: { color: "#334155", maxTicksLimit: 8, font } },
-                y: { beginAtZero: true, grid: { color: grid }, ticks: { color: "#334155", font } },
+                x: {grid: {display: false}, ticks: {color: "#334155", maxTicksLimit: 8, font}},
+                y: {beginAtZero: true, grid: {color: grid}, ticks: {color: "#334155", font}},
             },
         };
     }
@@ -270,13 +303,21 @@ export class MaintenanceRepairDashboard extends Component {
     doughnutConfig(source, colors, plugins = []) {
         return {
             type: "doughnut",
-            data: { labels: source.labels, datasets: [{ data: source.data, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }] },
+            data: {
+                labels: source.labels,
+                datasets: [{data: source.data, backgroundColor: colors, borderWidth: 0, hoverOffset: 8}]
+            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: "58%",
-                animation: { animateRotate: true, duration: 900 },
-                plugins: { legend: { position: "right", labels: { usePointStyle: true, boxWidth: 8, color: "#0F172A", padding: 18 } } },
+                animation: {animateRotate: true, duration: 900},
+                plugins: {
+                    legend: {
+                        position: "right",
+                        labels: {usePointStyle: true, boxWidth: 8, color: "#0F172A", padding: 18}
+                    }
+                },
             },
             plugins,
         };
@@ -288,7 +329,7 @@ export class MaintenanceRepairDashboard extends Component {
             afterDraw(chart) {
                 const dataset = chart.data.datasets[0]?.data || [];
                 const total = dataset.reduce((sum, value) => sum + Number(value || 0), 0);
-                const { ctx, chartArea } = chart;
+                const {ctx, chartArea} = chart;
 
                 if (!chartArea) {
                     return;
@@ -314,8 +355,25 @@ export class MaintenanceRepairDashboard extends Component {
     miniLineConfig(values, color, fill) {
         return {
             type: "line",
-            data: { labels: values.map((_, index) => index + 1), datasets: [{ data: values, borderColor: color, backgroundColor: `${color}18`, borderWidth: 2.5, fill, pointRadius: 0, tension: 0.42 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, elements: { line: { capBezierPoints: true } } },
+            data: {
+                labels: values.map((_, index) => index + 1),
+                datasets: [{
+                    data: values,
+                    borderColor: color,
+                    backgroundColor: `${color}18`,
+                    borderWidth: 2.5,
+                    fill,
+                    pointRadius: 0,
+                    tension: 0.42
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {legend: {display: false}, tooltip: {enabled: false}},
+                scales: {x: {display: false}, y: {display: false}},
+                elements: {line: {capBezierPoints: true}}
+            },
         };
     }
 }
