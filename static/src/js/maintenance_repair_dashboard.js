@@ -87,8 +87,23 @@ export class MaintenanceRepairDashboard extends Component {
         return this.user?.name || "Mitchell Admin";
     }
 
-    openKpi(kpi) {
-        this.notification.add(`${kpi.title} drill-down is ready to configure.`, { type: "info" });
+    async openKpi(kpi) {
+        if (kpi.key !== "repair_orders") {
+            this.notification.add(`${kpi.title} drill-down is ready to configure.`, { type: "info" });
+            return;
+        }
+        try {
+            await this.action.doAction({
+                type: "ir.actions.act_window",
+                name: "Repair Orders",
+                res_model: "repair.order",
+                view_mode: "tree,form",
+                views: [[false, "tree"], [false, "form"]],
+                target: "current",
+            });
+        } catch {
+            this.notification.add("Unable to open Repair Orders.", { type: "danger" });
+        }
     }
 
     openMaintenance(row) {

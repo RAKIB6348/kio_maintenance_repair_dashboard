@@ -29,8 +29,8 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             self._date_domain(maintenance_model, start_date, end_date)
             + self._maintenance_type_domain(maintenance_model, "preventive"),
         )
-        repair_orders = self._count(repair_model, self._date_domain(repair_model, start_date, end_date))
-        previous_repairs = self._count(repair_model, self._date_domain(repair_model, previous_start, previous_end))
+        repair_orders = self._count(repair_model, self._base_domain(repair_model, start_date, end_date))
+        previous_repairs = self._count(repair_model, self._base_domain(repair_model, previous_start, previous_end))
         pending_orders = self._pending_count(maintenance_model) + self._pending_count(repair_model)
         overdue_orders = self._overdue_count(maintenance_model, today) + self._overdue_count(repair_model, today)
         maintenance_cost = self._maintenance_cost(repair_model, start_date, end_date)
@@ -41,7 +41,7 @@ class MaintenanceRepairDashboard(models.AbstractModel):
             "kpis": [
                 self._kpi("total_requests", "Total Requests", total_requests, previous_requests, "35 In Progress", "clipboard", "primary"),
                 self._kpi("maintenance_orders", "Maintenance Orders", maintenance_orders, previous_requests, "14 In Progress", "maintenance", "success"),
-                self._kpi("repair_orders", "Repair Orders", repair_orders, previous_repairs, "9 In Progress", "repair", "info"),
+                self._kpi("repair_orders", "Repair Orders", repair_orders, previous_repairs, "%s Total" % repair_orders, "repair", "info"),
                 self._kpi("pending_orders", "Pending Orders", pending_orders, pending_orders + 3, "4 On Hold", "clock", "warning"),
                 self._kpi("overdue_orders", "Overdue Orders", overdue_orders, overdue_orders + 2, "%s Overdue" % overdue_orders, "warning", "danger"),
                 self._kpi("maintenance_cost", "Maintenance Cost", maintenance_cost, previous_cost, "This Month", "money", "teal", money=True),
@@ -81,6 +81,15 @@ class MaintenanceRepairDashboard(models.AbstractModel):
     def _date_domain(self, model, start_date, end_date):
         field = self._field(model, ["request_date", "schedule_date", "create_date", "date"])
         return [(field, ">=", start_date), (field, "<=", end_date)] if field else []
+
+    def _company_domain(self, model):
+        if not self._field(model, ["company_id"]):
+            return []
+        company_ids = self.env.context.get("allowed_company_ids") or self.env.companies.ids
+        return [("company_id", "in", company_ids)] if company_ids else []
+
+    def _base_domain(self, model, start_date, end_date):
+        return self._date_domain(model, start_date, end_date) + self._company_domain(model)
 
     def _maintenance_type_domain(self, model, maintenance_type):
         return [("maintenance_type", "=", maintenance_type)] if self._field(model, ["maintenance_type"]) else []
