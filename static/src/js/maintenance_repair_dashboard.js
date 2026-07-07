@@ -377,7 +377,54 @@ export class MaintenanceRepairDashboard extends Component {
                     }
                 },
             },
-            plugins,
+            plugins: [this.doughnutPercentageLabelsPlugin(), ...plugins],
+        };
+    }
+
+    doughnutPercentageLabelsPlugin() {
+        return {
+            id: "kioDoughnutPercentageLabels",
+            afterDatasetsDraw(chart) {
+                const dataset = chart.data.datasets[0];
+                const values = dataset?.data || [];
+                const total = values.reduce((sum, value) => sum + Number(value || 0), 0);
+
+                if (!total) {
+                    return;
+                }
+
+                const meta = chart.getDatasetMeta(0);
+                const {ctx} = chart;
+
+                ctx.save();
+                ctx.fillStyle = "#FFFFFF";
+                ctx.font = "800 12px Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+
+                meta.data.forEach((arc, index) => {
+                    const value = Number(values[index] || 0);
+                    const percentage = (value / total) * 100;
+
+                    if (percentage < 3) {
+                        return;
+                    }
+
+                    const {x, y, startAngle, endAngle, innerRadius, outerRadius} = arc.getProps(
+                        ["x", "y", "startAngle", "endAngle", "innerRadius", "outerRadius"],
+                        true
+                    );
+                    const angle = (startAngle + endAngle) / 2;
+                    const radius = (innerRadius + outerRadius) / 2;
+
+                    ctx.fillText(
+                        `${percentage.toFixed(1)}%`,
+                        x + Math.cos(angle) * radius,
+                        y + Math.sin(angle) * radius
+                    );
+                });
+                ctx.restore();
+            },
         };
     }
 
