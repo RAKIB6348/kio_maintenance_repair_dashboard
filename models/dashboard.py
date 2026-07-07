@@ -69,8 +69,8 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         return {
             "period": {"label": "%s - %s" % (start_date.strftime("%b %d, %Y"), end_date.strftime("%b %d, %Y"))},
             "kpis": [
-                self._kpi("maintenance_orders", "Maintenance Orders", total_maintenance_orders, total_maintenance_orders_previous, f"{maintenance_orders_this_month} This Month", "maintenance", "success"),
-                self._kpi("repair_orders", "Repair Orders", total_repair_orders, total_repair_orders_previous,
+                self._kpi("maintenance_orders", "Total Maintenance Orders", total_maintenance_orders, total_maintenance_orders_previous, f"{maintenance_orders_this_month} This Month", "maintenance", "success"),
+                self._kpi("repair_orders", "Total Repair Orders", total_repair_orders, total_repair_orders_previous,
                           f"{repair_orders_this_month} This Month", "repair", "info"),
 
                 # নতুন যোগ করা হলো
