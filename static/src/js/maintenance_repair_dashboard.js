@@ -278,7 +278,7 @@ export class MaintenanceRepairDashboard extends Component {
             this.categoryChart.el,
             this.doughnutConfig(
                 data.charts.category,
-                [COLORS.primary, "#0875E1", COLORS.success, "#F97316", "#94A3B8"],
+                this.dynamicChartColors(data.charts.category.data.length),
                 [this.doughnutCenterTextPlugin("Total Requests")]
             )
         ));
@@ -337,6 +337,25 @@ export class MaintenanceRepairDashboard extends Component {
                 y: {beginAtZero: true, grid: {color: grid}, ticks: {color: "#334155", font}},
             },
         };
+    }
+
+    dynamicChartColors(count) {
+        const palette = [
+            COLORS.primary,
+            "#0875E1",
+            COLORS.success,
+            "#F97316",
+            "#94A3B8",
+            "#8B5CF6",
+            "#EC4899",
+            "#14B8A6",
+            "#EAB308",
+            "#F43F5E",
+        ];
+        if (count <= palette.length) {
+            return palette.slice(0, count);
+        }
+        return Array.from({length: count}, (_, index) => `hsl(${Math.round((index * 360) / count)}, 72%, 52%)`);
     }
 
     doughnutConfig(source, colors, plugins = []) {

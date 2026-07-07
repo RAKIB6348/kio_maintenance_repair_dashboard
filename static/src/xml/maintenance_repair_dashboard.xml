@@ -49,7 +49,7 @@
                             <div class="kio-chart kio-chart-line"><canvas t-ref="trendChart"/></div>
                         </article>
                         <article class="kio-panel">
-                            <div class="kio-panel-head"><h2>Requests by Category</h2></div>
+                            <div class="kio-panel-head"><h2>Maintenance Requests by Equipment Category</h2></div>
                             <div class="kio-chart"><canvas t-ref="categoryChart"/></div>
                         </article>
                         <article class="kio-panel">

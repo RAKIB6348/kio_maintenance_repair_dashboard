@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from collections import Counter
 from datetime import timedelta
 
 from odoo import api, fields, models
@@ -206,20 +205,32 @@ class MaintenanceRepairDashboard(models.AbstractModel):
         return {"labels": labels, "maintenance": maintenance, "repairs": repairs}
 
     def _category_chart(self, model, start_date, end_date):
-        labels = ["Mechanical", "Electrical", "Civil", "HVAC", "Other"]
-        counts = Counter()
-        if model is not False:
-            records = model.search(self._date_domain(model, start_date, end_date))
-            category_field = self._field(model, ["maintenance_type", "category_id"])
-            for record in records:
-                if category_field == "category_id" and record.category_id:
-                    counts[record.category_id.display_name] += 1
-                elif category_field == "maintenance_type":
-                    counts[dict(record._fields[category_field].selection).get(record[category_field], "Other")] += 1
-        data = [counts.get(label, 0) for label in labels]
-        if not any(data):
-            data = [16, 10, 8, 5, 3]
-        return {"labels": labels, "data": data}
+        if model is False or not self._field(model, ["equipment_id"]):
+            return {"total_requests": 0, "equipment_categories": [], "labels": [], "data": []}
+
+        domain = self._company_domain(model) + [("equipment_id.category_id", "!=", False)]
+        category_counts = {}
+        for request in model.search(domain):
+            category = request.equipment_id.category_id
+            if category.id not in category_counts:
+                category_counts[category.id] = {
+                    "id": category.id,
+                    "name": category.display_name,
+                    "count": 0,
+                }
+            category_counts[category.id]["count"] += 1
+
+        equipment_categories = sorted(
+            category_counts.values(),
+            key=lambda category: (-category["count"], category["name"]),
+        )
+
+        return {
+            "total_requests": sum(category["count"] for category in equipment_categories),
+            "equipment_categories": equipment_categories,
+            "labels": [category["name"] for category in equipment_categories],
+            "data": [category["count"] for category in equipment_categories],
+        }
 
     # KIO CUSTOM: Dynamic repair.order status chart from actual state selection.
     def _status_chart(self, repair_model, maintenance_model=False, start_date=False, end_date=False):
