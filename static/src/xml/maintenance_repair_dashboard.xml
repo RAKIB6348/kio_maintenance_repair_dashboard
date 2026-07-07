@@ -61,7 +61,7 @@
                     <section class="kio-table-grid">
                         <article class="kio-panel">
                             <div class="kio-panel-head"><h2>Recent Maintenance Requests</h2><button type="button" t-on-click="() => openSection('Maintenance Requests')">View All</button></div>
-                            <div class="kio-table-wrap"><table class="kio-table"><thead><tr><th>Request No</th><th>Equipment</th><th>Priority</th><th>Requested Date</th><th>Status</th></tr></thead><tbody>
+                            <div class="kio-table-wrap"><table class="kio-table"><thead><tr><th>Request Name</th><th>Equipment</th><th>Priority</th><th>Requested Date</th><th>Status</th></tr></thead><tbody>
                                 <t t-foreach="state.data.recent_maintenance" t-as="row" t-key="row.id"><tr t-on-click="() => openMaintenance(row)"><td class="kio-link" t-esc="row.request_no"/><td t-esc="row.equipment"/><td><span t-att-class="priorityClass(row.priority)" t-esc="row.priority"/></td><td t-esc="row.date"/><td><span t-att-class="statusClass(row.status)" t-esc="row.status"/></td></tr></t>
                             </tbody></table></div>
                         </article>
